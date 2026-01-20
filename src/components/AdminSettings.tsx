@@ -43,4 +43,3 @@ export const AdminSettings: React.FC = () => {
     </div>
   );
 };
-};
