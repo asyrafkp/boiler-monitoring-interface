@@ -4,6 +4,7 @@ import { useAuth } from './contexts/AuthContext'
 import LoginPage from './pages/LoginPage'
 import BoilerCard from './components/BoilerCard'
 import StatusOverview from './components/StatusOverview'
+import { AdminPanel } from './components/AdminPanel'
 import { ONEDRIVE_CONFIG, getCurrentMonthFolderName } from './config/oneDriveConfig'
 import { fetchBoilerDataFromOneDrive } from './services/oneDriveService_v2'
 import { graphApiService } from './services/graphApiService'
@@ -318,6 +319,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
         <p className="footer-secondary">Data updated hourly from OneDrive Excel files | Month: {currentMonth}</p>
         <p className="footer-tech">Powered by React + Microsoft OneDrive Integration</p>
       </footer>
+
+      {user?.userType === 'admin' && <AdminPanel />}
     </div>
   )
 }

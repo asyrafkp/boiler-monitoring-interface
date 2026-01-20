@@ -20,7 +20,7 @@ export interface ParsedBoilerData {
  * Find the latest row with non-zero steam data for any boiler
  * Columns: E-H (B1), I-L (B2), M-P (B3)
  */
-function parseNGSteamSheet(data: XLSX.WorkSheet): Omit<ParsedBoilerData, 'b1Water' | 'b2Water' | 'b3Water' | 'timestamp'> {
+export function parseNGSteamSheet(data: XLSX.WorkSheet): Omit<ParsedBoilerData, 'b1Water' | 'b2Water' | 'b3Water' | 'timestamp'> {
   // Convert worksheet to array format
   const rows = XLSX.utils.sheet_to_json(data, { header: 1 }) as any[][]
 
@@ -83,7 +83,7 @@ function parseNGSteamSheet(data: XLSX.WorkSheet): Omit<ParsedBoilerData, 'b1Wate
  * Find the latest row with non-zero water data
  * Columns: G (B1), M (B2), S (B3)
  */
-function parseWaterSteamSheet(data: XLSX.WorkSheet): { b1Water: number; b2Water: number; b3Water: number } {
+export function parseWaterSteamSheet(data: XLSX.WorkSheet): { b1Water: number; b2Water: number; b3Water: number } {
   const rows = XLSX.utils.sheet_to_json(data, { header: 1 }) as any[][]
 
   if (rows.length === 0) {
