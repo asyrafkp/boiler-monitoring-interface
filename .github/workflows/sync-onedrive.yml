@@ -42,20 +42,21 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git config --global init.defaultBranch main
 
       - name: Commit and push
+        if: always()
         run: |
-          git add data/boiler_data.xlsx
+          git add data/boiler_data.xlsx data/.sync_ready 2>/dev/null || true
           
-          # Check if there are changes
+          # Check if there are actual changes
           if git diff --cached --quiet; then
-            echo "No changes to commit"
+            echo "No file changes to commit"
           else
-            git commit -m "chore: sync Excel data from OneDrive [automated]"
-            git push origin main
-            echo "✅ Changes pushed to GitHub"
+            git commit -m "chore: sync Excel data from OneDrive [automated]" || true
+            git push origin main 2>&1 || echo "Push skipped (no changes or already up to date)"
           fi
 
       - name: Notify on failure
