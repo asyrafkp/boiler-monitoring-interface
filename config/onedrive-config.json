@@ -1,0 +1,12 @@
+{
+  "onedrive": {
+    "folder_link": "https://1drv.ms/f/c/B6A282DAF4E2A35F/IgDut87lcIP0QYgkXmaSdS71AZDxNKdtobdFZwBNOu4j9uU?e=kNphIz",
+    "description": "OneDrive folder containing Year/Month structure with Excel files",
+    "structure": {
+      "level_1": "Year (e.g., 2026)",
+      "level_2": "Month (e.g., January)",
+      "file_pattern": "*.xlsx"
+    },
+    "notes": "GitHub Actions workflow will automatically download the latest month's Excel file and store in data/boiler_data.xlsx"
+  }
+}

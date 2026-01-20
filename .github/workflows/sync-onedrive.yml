@@ -1,0 +1,65 @@
+name: Sync OneDrive Excel to GitHub
+
+on:
+  schedule:
+    # Run daily at 1 AM UTC (adjust to your timezone)
+    - cron: '0 1 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Download Excel from OneDrive
+        env:
+          ONEDRIVE_LINK: ${{ secrets.ONEDRIVE_LINK }}
+        run: python .github/scripts/download_from_onedrive.py
+        
+      - name: Check if file was downloaded
+        run: |
+          if [ -f "data/boiler_data.xlsx" ]; then
+            echo "✅ File downloaded successfully"
+            ls -lh data/boiler_data.xlsx
+          else
+            echo "⚠️ File not found, will create placeholder"
+          fi
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Commit and push
+        run: |
+          git add data/boiler_data.xlsx
+          
+          # Check if there are changes
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: sync Excel data from OneDrive [automated]"
+            git push origin main
+            echo "✅ Changes pushed to GitHub"
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Sync failed - check logs above"
+          exit 1
