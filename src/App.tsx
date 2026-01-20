@@ -323,7 +323,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
 
       {user?.userType === 'admin' && (
         <>
-          {console.log('Rendering AdminPanel and AdminSettings for admin user')}
+          <div style={{position: 'fixed', top: '10px', left: '10px', backgroundColor: 'red', color: 'white', padding: '10px', zIndex: 9999}}>
+            ADMIN MODE ACTIVE - TEST
+          </div>
           <AdminPanel />
           <AdminSettings />
         </>
