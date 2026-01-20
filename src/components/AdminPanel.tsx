@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { syncOneDriveExcelToSupabase, getSyncHistory } from '../services/oneDriveSyncService';
+import { syncFromGitHub } from '../services/githubSyncService';
 import './AdminPanel.css';
 
 interface SyncLog {
@@ -55,6 +56,27 @@ export const AdminPanel: React.FC = () => {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       setStatusMessage(`❌ Sync failed: ${errorMsg}`);
+      setUploadStatus('error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGitHubSync = async () => {
+    setIsLoading(true);
+    setStatusMessage('Syncing from GitHub...');
+    setUploadStatus(null);
+
+    try {
+      const result = await syncFromGitHub();
+      setStatusMessage(result.message);
+      setUploadStatus('success');
+      
+      // Refresh sync history
+      await loadSyncHistory();
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      setStatusMessage(`❌ GitHub sync failed: ${errorMsg}`);
       setUploadStatus('error');
     } finally {
       setIsLoading(false);
@@ -121,7 +143,40 @@ export const AdminPanel: React.FC = () => {
             </div>
 
             <div className="admin-section">
-              <h3>📊 Sync History</h3>
+              <h3>� Sync from GitHub</h3>
+              <div className="github-sync">
+                <p className="sync-description">
+                  Automatically fetch and sync Excel data from your GitHub repository.
+                </p>
+                <button 
+                  className="github-sync-btn"
+                  onClick={handleGitHubSync}
+                  disabled={isLoading}
+                >
+                  {isLoading ? '⏳ Syncing...' : '📥 Sync from GitHub'}
+                </button>
+                <div className="github-info">
+                  <p><strong>Setup required first:</strong></p>
+                  <ol>
+                    <li>Create a folder <code>data/</code> in your GitHub repo</li>
+                    <li>Upload <code>boiler_data.xlsx</code> to the <code>data/</code> folder</li>
+                    <li>Click the button to sync automatically</li>
+                  </ol>
+                  <p>
+                    <a 
+                      href="https://github.com/asyrafkp/boiler-monitoring-interface" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                    >
+                      📂 Go to GitHub Repo →
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="admin-section">
+              <h3>�📊 Sync History</h3>
               <div className="sync-history">
                 {syncLogs.length === 0 ? (
                   <p className="no-logs">No sync history yet</p>
