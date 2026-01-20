@@ -323,6 +323,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
 
       {user?.userType === 'admin' && (
         <>
+          {console.log('Rendering AdminPanel and AdminSettings for admin user')}
           <AdminPanel />
           <AdminSettings />
         </>

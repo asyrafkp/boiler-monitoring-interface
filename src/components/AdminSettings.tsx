@@ -7,6 +7,7 @@ import './AdminSettings.css';
 
 // Admin settings component for managing OneDrive sync configuration
 export const AdminSettings: React.FC = () => {
+  console.log('AdminSettings component rendering');
   const [isOpen, setIsOpen] = useState(false);
   const [oneDriveLink, setOneDriveLink] = useState('');
   const [tempLink, setTempLink] = useState('');
