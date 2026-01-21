@@ -163,3 +163,4 @@ export function addSyncHistory(entry: Omit<SyncLog, 'id'>): SyncLog {
   }
   saveSyncHistory();
   return syncLog;
+}
