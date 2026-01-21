@@ -23,8 +23,8 @@ const createNGSteamSheet = () => {
   // Headers
   data.push(['Date', 'Time', '', '', 'B1 Steam', 'B1 NG', 'B1 Output', 'B1 Ratio', '', 'B2 Steam', 'B2 NG', 'B2 Output', 'B2 Ratio', '', 'B3 Steam', 'B3 NG', 'B3 Output', 'B3 Ratio']);
   
-  // Add 505 rows of sample data (rows to row 506)
-  for (let i = 1; i < 505; i++) {
+  // Add 50 rows of sample data (minimal size for testing)
+  for (let i = 1; i < 50; i++) {
     data.push([
       '01/01/2026',
       '12:00:00',
@@ -47,7 +47,7 @@ const createNGSteamSheet = () => {
     ]);
   }
   
-  // Add sum row at row 506
+  // Add sum row at row 51
   data.push([
     '01/01/2026',
     '12:30:00',
@@ -79,8 +79,8 @@ const createWaterSteamSheet = () => {
   // Headers
   data.push(['Date', 'Time', '', '', '', '', 'B1 Water', '', '', '', '', '', 'B2 Water', '', '', '', '', '', 'B3 Water']);
   
-  // Add 505 rows of sample data
-  for (let i = 1; i < 505; i++) {
+  // Add 50 rows of sample data (minimal size)
+  for (let i = 1; i < 50; i++) {
     data.push([
       '01/01/2026',
       '12:00:00',
@@ -93,7 +93,7 @@ const createWaterSteamSheet = () => {
     ]);
   }
   
-  // Add sum row at row 506
+  // Add sum row at row 51
   data.push([
     '01/01/2026',
     '12:30:00',
