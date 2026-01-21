@@ -10,15 +10,34 @@ interface SyncLog {
   status: string;
 }
 
+interface SystemHealth {
+  lastSyncTime: string;
+  dataAge: string;
+  connectionStatus: 'connected' | 'disconnected' | 'unknown';
+  syncErrors: string[];
+  dataFreshness: 'fresh' | 'stale' | 'very-stale';
+}
+
 export const AdminPanel: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [syncLogs, setSyncLogs] = useState<SyncLog[]>([]);
   const [statusMessage, setStatusMessage] = useState('');
   const [uploadStatus, setUploadStatus] = useState<'success' | 'error' | null>(null);
+  const [systemHealth, setSystemHealth] = useState<SystemHealth>({
+    lastSyncTime: 'Unknown',
+    dataAge: 'Unknown',
+    connectionStatus: 'unknown',
+    syncErrors: [],
+    dataFreshness: 'fresh'
+  });
 
   useEffect(() => {
     loadSyncHistory();
+    checkSystemHealth();
+    // Check system health every 30 seconds
+    const healthInterval = setInterval(checkSystemHealth, 30000);
+    return () => clearInterval(healthInterval);
   }, []);
 
   const loadSyncHistory = async () => {
@@ -27,6 +46,58 @@ export const AdminPanel: React.FC = () => {
       setSyncLogs(history);
     } catch (error) {
       console.error('Error loading sync history:', error);
+    }
+  };
+
+  const checkSystemHealth = async () => {
+    try {
+      // Fetch the main boiler data to check last update time
+      const cacheBuster = `?v=${Date.now()}`;
+      const response = await fetch(`/boiler-monitoring-interface/boiler_data.json${cacheBuster}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        const lastUpdate = data.lastUpdate || data.timestamp;
+        const lastSyncDate = new Date(lastUpdate);
+        const now = new Date();
+        const ageMinutes = Math.floor((now.getTime() - lastSyncDate.getTime()) / 60000);
+        
+        // Determine data freshness
+        let freshness: 'fresh' | 'stale' | 'very-stale' = 'fresh';
+        if (ageMinutes > 120) freshness = 'very-stale'; // > 2 hours
+        else if (ageMinutes > 60) freshness = 'stale'; // > 1 hour
+        
+        setSystemHealth({
+          lastSyncTime: lastSyncDate.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          }),
+          dataAge: ageMinutes < 1 ? 'Just now' : 
+                   ageMinutes === 1 ? '1 minute ago' :
+                   ageMinutes < 60 ? `${ageMinutes} minutes ago` :
+                   ageMinutes < 120 ? '1 hour ago' :
+                   `${Math.floor(ageMinutes / 60)} hours ago`,
+          connectionStatus: 'connected',
+          syncErrors: [],
+          dataFreshness: freshness
+        });
+      } else {
+        setSystemHealth(prev => ({
+          ...prev,
+          connectionStatus: 'disconnected',
+          syncErrors: [`HTTP ${response.status}: ${response.statusText}`]
+        }));
+      }
+    } catch (error) {
+      setSystemHealth(prev => ({
+        ...prev,
+        connectionStatus: 'disconnected',
+        syncErrors: [error instanceof Error ? error.message : 'Unknown error']
+      }));
     }
   };
 
@@ -92,6 +163,68 @@ export const AdminPanel: React.FC = () => {
               >
                 ✕
               </button>
+            </div>
+
+            {/* System Health Section */}
+            <div className="admin-section system-health">
+              <h3>🏥 System Health</h3>
+              <div className="health-grid">
+                <div className={`health-card ${systemHealth.connectionStatus}`}>
+                  <div className="health-icon">
+                    {systemHealth.connectionStatus === 'connected' ? '🟢' : 
+                     systemHealth.connectionStatus === 'disconnected' ? '🔴' : '🟡'}
+                  </div>
+                  <div className="health-info">
+                    <span className="health-label">Connection Status</span>
+                    <span className="health-value">
+                      {systemHealth.connectionStatus === 'connected' ? 'Connected' :
+                       systemHealth.connectionStatus === 'disconnected' ? 'Disconnected' : 'Unknown'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className={`health-card ${systemHealth.dataFreshness}`}>
+                  <div className="health-icon">
+                    {systemHealth.dataFreshness === 'fresh' ? '✅' :
+                     systemHealth.dataFreshness === 'stale' ? '⚠️' : '❌'}
+                  </div>
+                  <div className="health-info">
+                    <span className="health-label">Data Freshness</span>
+                    <span className="health-value">{systemHealth.dataAge}</span>
+                  </div>
+                </div>
+
+                <div className="health-card">
+                  <div className="health-icon">🕐</div>
+                  <div className="health-info">
+                    <span className="health-label">Last Sync</span>
+                    <span className="health-value">{systemHealth.lastSyncTime}</span>
+                  </div>
+                </div>
+
+                <div className="health-card">
+                  <div className="health-icon">
+                    {systemHealth.syncErrors.length === 0 ? '✓' : '⚠'}
+                  </div>
+                  <div className="health-info">
+                    <span className="health-label">Sync Errors</span>
+                    <span className="health-value">
+                      {systemHealth.syncErrors.length === 0 ? 'None' : systemHealth.syncErrors.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {systemHealth.syncErrors.length > 0 && (
+                <div className="error-details">
+                  <strong>Error Details:</strong>
+                  <ul>
+                    {systemHealth.syncErrors.map((error, idx) => (
+                      <li key={idx}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             <div className="admin-section">
