@@ -6,9 +6,7 @@ import BoilerCard from './components/BoilerCard'
 import StatusOverview from './components/StatusOverview'
 import { AdminPanel } from './components/AdminPanel'
 import { AdminSettings } from './components/AdminSettings'
-import { ONEDRIVE_CONFIG, getCurrentMonthFolderName } from './config/oneDriveConfig'
-import { fetchBoilerDataFromOneDrive } from './services/oneDriveService_v2'
-import { graphApiService } from './services/graphApiService'
+import { supabase } from './services/supabaseService'
 
 interface BoilerData {
   id: number
@@ -80,7 +78,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
   const [latestDataTime, setLatestDataTime] = useState<string>('No data yet')
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-  const currentMonth = getCurrentMonthFolderName()
 
   // Format date for display
   const formatUpdateTime = () => {
@@ -123,64 +120,74 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
     }
   }
 
-  // Fetch data from OneDrive (using real Graph API)
+  // Fetch data from Supabase
   const fetchBoilerData = async () => {
     setLoading(true)
     setError(null)
 
     try {
-      if (!graphApiService.isAuthenticated()) {
-        // Show login button message
-        throw new Error('Please authenticate with OneDrive to fetch real data. Click the "Sign in with OneDrive" button.')
+      console.log('📊 Fetching boiler data from Supabase...')
+      
+      // Fetch latest reading from Supabase
+      const { data, error: fetchError } = await supabase
+        .from('boiler_readings')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (fetchError) {
+        throw new Error(`Failed to fetch data: ${fetchError.message}`)
       }
 
-      console.log('Fetching real boiler data from OneDrive...')
-      
-      // Fetch real data from OneDrive
-      const realData = await fetchBoilerDataFromOneDrive()
+      if (!data) {
+        throw new Error('No data available. Please upload an Excel file first.')
+      }
 
-      // Map parsed data to boiler state
+      console.log('✅ Data fetched from Supabase:', data)
+
+      // Map Supabase data to boiler state
       const mappedBoilers: BoilerData[] = [
         {
           id: 1,
           name: 'Boiler No. 1',
-          steam: realData.b1.steam,
-          ng: realData.b1.ng,
-          ratio: realData.b1.ratio,
-          output: realData.b1.output,
-          water: realData.b1Water,
+          steam: data.b1_steam || 0,
+          ng: data.ng_ratio || 0,
+          ratio: data.ng_ratio || 0,
+          output: (data.b1_steam / 18) * 100 || 0,
+          water: data.b1_water || 0,
           maxCapacity: 18,
-          status: determineStatus(realData.b1.steam, 18)
+          status: determineStatus(data.b1_steam || 0, 18)
         },
         {
           id: 2,
           name: 'Boiler No. 2',
-          steam: realData.b2.steam,
-          ng: realData.b2.ng,
-          ratio: realData.b2.ratio,
-          output: realData.b2.output,
-          water: realData.b2Water,
+          steam: data.b2_steam || 0,
+          ng: data.ng_ratio || 0,
+          ratio: data.ng_ratio || 0,
+          output: (data.b2_steam / 18) * 100 || 0,
+          water: data.b2_water || 0,
           maxCapacity: 18,
-          status: determineStatus(realData.b2.steam, 18)
+          status: determineStatus(data.b2_steam || 0, 18)
         },
         {
           id: 3,
           name: 'Boiler No. 3',
-          steam: realData.b3.steam,
-          ng: realData.b3.ng,
-          ratio: realData.b3.ratio,
-          output: realData.b3.output,
-          water: realData.b3Water,
+          steam: data.b3_steam || 0,
+          ng: data.ng_ratio || 0,
+          ratio: data.ng_ratio || 0,
+          output: (data.b3_steam / 16) * 100 || 0,
+          water: data.b3_water || 0,
           maxCapacity: 16,
-          status: determineStatus(realData.b3.steam, 16)
+          status: determineStatus(data.b3_steam || 0, 16)
         }
       ]
 
       setBoilers(mappedBoilers)
       formatUpdateTime()
       
-      // Format latest data timestamp
-      const dataDate = new Date()
+      // Format latest data timestamp from Supabase
+      const dataDate = new Date(data.created_at)
       const formattedDate = dataDate.toLocaleString('en-GB', {
         day: '2-digit',
         month: '2-digit',
@@ -193,17 +200,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
       })
       setLatestDataTime(`${formattedDate}, ${formattedTime}hrs`)
       
-      console.log('Real data fetched and displayed successfully')
+      console.log('✅ Boiler data displayed successfully')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch boiler data'
       setError(errorMessage)
-      console.error('Data fetch error:', err)
-      
-      // Fallback to mock data if not authenticated
-      if (errorMessage.includes('authenticate') || errorMessage.includes('Not authenticated')) {
-        console.log('Using mock data until authentication...')
-        // Keep existing state or use mock data
-      }
+      console.error('❌ Data fetch error:', err)
     } finally {
       setLoading(false)
     }
@@ -216,13 +217,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
     return () => clearInterval(clockInterval)
   }, [])
 
-  // Initial data fetch and hourly refresh
+  // Initial data fetch and refresh every 30 seconds
   useEffect(() => {
     fetchBoilerData()
 
-    const refreshInterval = setInterval(fetchBoilerData, ONEDRIVE_CONFIG.refreshInterval)
+    const refreshInterval = setInterval(fetchBoilerData, 30000) // 30 seconds
     return () => clearInterval(refreshInterval)
-  }, [currentMonth])
+  }, [])
 
   // Handler for when admin updates OneDrive link and syncs data
   const handleSyncComplete = () => {
@@ -237,23 +238,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
           <div className="header-top">
             <h1>Boiler Operation Monitoring System</h1>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              {user.userType === 'admin' && !graphApiService.isAuthenticated() && (
-                <button 
-                  onClick={() => window.location.href = graphApiService.getLoginUrl()}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#0060b0',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '600'
-                  }}
-                >
-                  Sign in with OneDrive
-                </button>
-              )}
               {user.userType === 'user' && (
                 <div style={{
                   padding: '8px 12px',
@@ -303,14 +287,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
               Next Update: <strong>{nextUpdate}</strong>
             </span>
             <span className="data-source">
-              Source: <strong>{graphApiService.isAuthenticated() ? '📊 OneDrive (Live)' : '🔒 Sign in for live data'}</strong>
+              Source: <strong>📊 Supabase (Live)</strong>
             </span>
           </div>
         </div>
       </header>
 
       <main className="main-content">
-        {loading && <div className="loading-indicator">📡 Fetching data from OneDrive...</div>}
+        {loading && <div className="loading-indicator">📡 Fetching data from Supabase...</div>}
 
         <StatusOverview boilers={boilers} />
 
@@ -323,8 +307,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
 
       <footer className="app-footer">
         <p>📊 Latest Data Available: <strong>{latestDataTime}</strong></p>
-        <p className="footer-secondary">Data updated hourly from OneDrive Excel files | Month: {currentMonth}</p>
-        <p className="footer-tech">Powered by React + Microsoft OneDrive Integration</p>
+        <p className="footer-secondary">Data synced from Excel uploads | Auto-refresh every 30 seconds</p>
+        <p className="footer-tech">Powered by React + Supabase</p>
       </footer>
 
       {user?.userType === 'admin' && (
