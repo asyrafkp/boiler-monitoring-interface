@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-01-21T04:23:18.956Z",
-  "lastUpdate": "01/21/2026, 12:23:18 PM",
+  "timestamp": "2026-01-21T04:26:12.928Z",
+  "lastUpdate": "01/21/2026, 12:26:12 PM",
   "boilers": [
     {
       "id": 1,
@@ -23,9 +23,9 @@
     {
       "id": 3,
       "name": "Boiler No. 3",
-      "steam": 51,
-      "ng": 1857,
-      "ratio": 36.411764705882355,
+      "steam": 10,
+      "ng": 426,
+      "ratio": 42.6,
       "water": 36,
       "maxCapacity": 16
     }

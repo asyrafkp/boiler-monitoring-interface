@@ -46,15 +46,15 @@ const waterSheet = workbook.Sheets[waterSheetName];
 function parseNGSteamSheet(worksheet) {
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
   
-  // Start from row 9 (after headers at row 6-8)
-  for (let i = data.length - 1; i >= 9; i--) {
+  // Search from row 540 down to row 9 (user confirmed row 535/index 533 has latest valid data)
+  // Limiting search to avoid test data in later rows
+  const maxRow = Math.min(data.length - 1, 540);
+  
+  for (let i = maxRow; i >= 9; i--) {
     const row = data[i];
     if (!row || row.length < 11) continue;
     
-    // Actual column mapping from real data:
-    // Col 2: TIME, Col 3-6: B1 (all at indices 3,4,5,6)
-    // Col 7-10: B2 (all at indices 7,8,9,10)
-    // Col 11-14: B3 (all at indices 11,12,13,14)
+    // Column mapping: B1(3-6), B2(7-10), B3(11-14)
     const b1Steam = parseFloat(row[3]) || 0;
     const b2Steam = parseFloat(row[7]) || 0;
     const b3Steam = parseFloat(row[11]) || 0;
