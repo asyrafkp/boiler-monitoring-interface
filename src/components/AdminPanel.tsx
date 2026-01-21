@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { syncOneDriveExcelToSupabase, getSyncHistory } from '../services/oneDriveSyncService';
-import { syncFromGitHub } from '../services/githubSyncService';
 import './AdminPanel.css';
 
 interface SyncLog {
@@ -60,13 +59,6 @@ export const AdminPanel: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleGitHubSync = async () => {
-    setIsLoading(true);
-    setStatusMessage('⚠️ GitHub sync requires ONEDRIVE_LINK secret. Use Settings or Manual Upload instead.');
-    setUploadStatus('error');
-    setIsLoading(false);
   };
 
   const formatDate = (dateString: string) => {
