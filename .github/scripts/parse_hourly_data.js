@@ -61,19 +61,26 @@ function parseDataB1B2(worksheet, boilerNum) {
 
     if (!dateStr) continue;
 
-    // Parse time
+    // Parse time and normalize to hourly intervals
     let timeStr = '';
+    let hourValue = 0;
+    
     if (typeof timeValue === 'number') {
-      const hours = Math.floor(timeValue * 24);
-      const minutes = Math.floor((timeValue * 24 - hours) * 60);
-      timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      const totalHours = timeValue * 24;
+      hourValue = Math.round(totalHours); // Round to nearest hour
     } else {
-      timeStr = timeValue.toString();
+      // Parse string time like "07:00" or "07:59"
+      const timeMatch = timeValue.toString().match(/(\d+):(\d+)/);
+      if (timeMatch) {
+        const hours = parseInt(timeMatch[1]);
+        const minutes = parseInt(timeMatch[2]);
+        hourValue = minutes >= 30 ? hours + 1 : hours; // Round to nearest hour
+      }
     }
-    // Convert 24:00 to 0:00 (midnight)
-    if (timeStr === '24:00') {
-      timeStr = '0:00';
-    }
+    
+    // Normalize hour value (handle 24+ as next day, but keep as 0-23 range)
+    hourValue = hourValue % 24;
+    timeStr = `${hourValue.toString().padStart(2, '0')}:00`;
 
     // Extract all values and ensure no negatives
     const steam = Math.max(0, parseFloat(row[2]) || 0);
@@ -164,19 +171,26 @@ function parseDataB3(worksheet, boilerNum) {
 
     if (!dateStr) continue;
 
-    // Parse time
+    // Parse time and normalize to hourly intervals
     let timeStr = '';
+    let hourValue = 0;
+    
     if (typeof timeValue === 'number') {
-      const hours = Math.floor(timeValue * 24);
-      const minutes = Math.floor((timeValue * 24 - hours) * 60);
-      timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      const totalHours = timeValue * 24;
+      hourValue = Math.round(totalHours); // Round to nearest hour
     } else {
-      timeStr = timeValue.toString();
+      // Parse string time like "07:00" or "07:59"
+      const timeMatch = timeValue.toString().match(/(\d+):(\d+)/);
+      if (timeMatch) {
+        const hours = parseInt(timeMatch[1]);
+        const minutes = parseInt(timeMatch[2]);
+        hourValue = minutes >= 30 ? hours + 1 : hours; // Round to nearest hour
+      }
     }
-    // Convert 24:00 to 0:00 (midnight)
-    if (timeStr === '24:00') {
-      timeStr = '0:00';
-    }
+    
+    // Normalize hour value (handle 24+ as next day, but keep as 0-23 range)
+    hourValue = hourValue % 24;
+    timeStr = `${hourValue.toString().padStart(2, '0')}:00`;
 
     // Extract all values and ensure no negatives
     // B3 Layout: A=Date, B=Time, C=Steam, D=Water, E=T1, F=T2, G=kWh, H=Burner (NG), I=Custody (NG),
