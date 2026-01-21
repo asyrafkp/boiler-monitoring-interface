@@ -48,10 +48,7 @@ Boiler Data (Root Folder)
     └── NGSTEAM RATIO.xlsx
 ```
 
-**OneDrive Folder URL:**
-```
-https://1drv.ms/f/c/B6A282DAF4E2A35F/IgDut87lcIP0QYgkXmaSdS71AZDxNKdtobdFZwBNOu4j9uU?e=VNxzpv
-```
+**Note:** OneDrive folder URL is configured in the application settings (not publicly shared for security).
 
 ## Installation & Build
 
