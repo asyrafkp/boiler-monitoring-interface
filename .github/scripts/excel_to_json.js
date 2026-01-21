@@ -47,7 +47,7 @@ function parseNGSteamSheet(worksheet) {
   
   for (let i = data.length - 1; i >= 0; i--) {
     const row = data[i];
-    if (!row || row.length < 8) continue;
+    if (!row || row.length < 15) continue;
     
     const b1Steam = parseFloat(row[4]) || 0;
     const b2Steam = parseFloat(row[9]) || 0;
@@ -85,7 +85,7 @@ function parseWaterSteamSheet(worksheet) {
   
   for (let i = data.length - 1; i >= 0; i--) {
     const row = data[i];
-    if (!row || row.length < 20) continue;
+    if (!row || row.length < 15) continue;
     
     const b1Water = parseFloat(row[6]) || 0;
     const b2Water = parseFloat(row[12]) || 0;
