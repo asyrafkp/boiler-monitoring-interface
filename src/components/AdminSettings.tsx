@@ -53,22 +53,17 @@ export const AdminSettings: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const success = await updateOneDriveLink(tempLink, 'admin');
-      
-      if (success) {
-        setOneDriveLink(tempLink);
-        setMessage('✅ OneDrive link updated successfully');
-        setMessageType('success');
-        setTimeout(() => {
-          setMessage('');
-          setMessageType(null);
-        }, 3000);
-      } else {
-        setMessage('❌ Failed to update link');
-        setMessageType('error');
-      }
+      await updateOneDriveLink(tempLink, 'admin');
+      setOneDriveLink(tempLink);
+      setMessage('✅ OneDrive link updated successfully');
+      setMessageType('success');
+      setTimeout(() => {
+        setMessage('');
+        setMessageType(null);
+      }, 3000);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Save link error:', errorMsg);
       setMessage(`❌ ${errorMsg}`);
       setMessageType('error');
     } finally {

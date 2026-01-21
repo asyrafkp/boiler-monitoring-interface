@@ -43,7 +43,7 @@ export async function updateAdminSetting(
   updatedBy?: string
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error, data } = await supabase
       .from('admin_settings')
       .upsert(
         {
@@ -56,15 +56,21 @@ export async function updateAdminSetting(
       );
 
     if (error) {
-      console.error(`Error updating setting ${settingKey}:`, error);
-      return false;
+      console.error(`❌ Error updating setting ${settingKey}:`, error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        status: error.status,
+      });
+      throw new Error(error.message || 'Failed to update setting');
     }
 
-    console.log(`✅ Setting updated: ${settingKey}`);
+    console.log(`✅ Setting updated: ${settingKey}`, data);
     return true;
   } catch (error) {
-    console.error('Error in updateAdminSetting:', error);
-    return false;
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error in updateAdminSetting:', errorMsg);
+    throw error;
   }
 }
 
