@@ -199,12 +199,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
         steam: boiler.steam,
         ng: boiler.ng,
         ratio: boiler.ratio,
-    fetchCumulativeData()
-
-    const refreshInterval = setInterval(() => {
-      fetchBoilerData()
-      fetchCumulativeData()
-    }
+        output: (boiler.steam / boiler.maxCapacity) * 100,
+        water: boiler.water,
         maxCapacity: boiler.maxCapacity,
         status: determineStatus(boiler.steam, boiler.maxCapacity)
       }))
@@ -246,8 +242,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
   // Initial data fetch and refresh every 30 seconds
   useEffect(() => {
     fetchBoilerData()
+    fetchCumulativeData()
 
-    const refreshInterval = setInterval(fetchBoilerData, 30000) // 30 seconds
+    const refreshInterval = setInterval(() => {
+      fetchBoilerData()
+      fetchCumulativeData()
+    }, 30000) // 30 seconds
     return () => clearInterval(refreshInterval)
   }, [])
 
@@ -311,11 +311,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
               Source: <strong>📊 GitHub (Auto-updated)</strong>
             </span>
           </div>
-        </div>
-      </header>
+        <loading && <div className="loading-indicator">📡 Loading boiler data...</div>}
 
-      <main className="main-content">
-        {CumulativeDailyData cumulativeData={cumulativeData} />
+        <StatusOverview boilers={boilers} />
+
+        <CumulativeDailyData cumulativeData={cumulativeDataata={cumulativeData} />
 
         <loading && <div className="loading-indicator">📡 Loading boiler data...</div>}
 
