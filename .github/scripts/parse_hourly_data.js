@@ -70,6 +70,10 @@ function parseDataB1B2(worksheet, boilerNum) {
     } else {
       timeStr = timeValue.toString();
     }
+    // Convert 24:00 to 0:00 (midnight)
+    if (timeStr === '24:00') {
+      timeStr = '0:00';
+    }
 
     // Extract all values and ensure no negatives
     const steam = Math.max(0, parseFloat(row[2]) || 0);
@@ -168,6 +172,10 @@ function parseDataB3(worksheet, boilerNum) {
       timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     } else {
       timeStr = timeValue.toString();
+    }
+    // Convert 24:00 to 0:00 (midnight)
+    if (timeStr === '24:00') {
+      timeStr = '0:00';
     }
 
     // Extract all values and ensure no negatives
