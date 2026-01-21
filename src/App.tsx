@@ -224,6 +224,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
     return () => clearInterval(refreshInterval)
   }, [currentMonth])
 
+  // Handler for when admin updates OneDrive link and syncs data
+  const handleSyncComplete = () => {
+    console.log('✅ Sync complete! Refreshing dashboard...')
+    fetchBoilerData()
+  }
+
   return (
     <div className="app-container">
       <header className="app-header">
@@ -324,7 +330,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
       {user?.userType === 'admin' && (
         <>
           <AdminPanel />
-          <AdminSettings />
+          <AdminSettings onSyncComplete={handleSyncComplete} />
         </>
       )}
     </div>

@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react';
 import {
   getOneDriveLink,
   updateOneDriveLink,
+  syncFromOneDriveLink,
 } from '../services/adminSettingsService';
 import './AdminSettings.css';
 
-export const AdminSettings: React.FC = () => {
+interface AdminSettingsProps {
+  onSyncComplete?: () => void;
+}
+
+export const AdminSettings: React.FC<AdminSettingsProps> = ({ onSyncComplete }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [oneDriveLink, setOneDriveLink] = useState('');
   const [tempLink, setTempLink] = useState('');
@@ -53,14 +58,28 @@ export const AdminSettings: React.FC = () => {
 
     setIsLoading(true);
     try {
+      // Save link to database
       await updateOneDriveLink(tempLink, 'admin');
       setOneDriveLink(tempLink);
-      setMessage('✅ OneDrive link updated successfully');
+      
+      // Auto-sync data from the new link
+      setMessage('⏳ Syncing data from new link...');
+      setMessageType('error'); // Use error style for neutral color
+      
+      await syncFromOneDriveLink(tempLink);
+      
+      setMessage('✅ Link saved and data synced successfully!');
       setMessageType('success');
+      
+      // Trigger parent callback to refresh dashboard
+      if (onSyncComplete) {
+        onSyncComplete();
+      }
+      
       setTimeout(() => {
         setMessage('');
         setMessageType(null);
-      }, 3000);
+      }, 4000);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error('Save link error:', errorMsg);

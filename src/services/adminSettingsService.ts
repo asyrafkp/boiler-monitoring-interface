@@ -1,4 +1,6 @@
-import { supabase } from './supabaseService';
+import { supabase, storeBoilerReading } from './supabaseService';
+import { parseNGSteamSheet, parseWaterSteamSheet } from './oneDriveService_v2';
+import * as XLSX from 'xlsx';
 
 export interface AdminSetting {
   id: number;
@@ -7,6 +9,12 @@ export interface AdminSetting {
   description?: string;
   updated_by?: string;
   updated_at: string;
+}
+
+export interface SyncResult {
+  success: boolean;
+  message: string;
+  rowsProcessed: number;
 }
 
 /**
@@ -114,5 +122,91 @@ export async function getAllAdminSettings(): Promise<AdminSetting[]> {
   } catch (error) {
     console.error('Error in getAllAdminSettings:', error);
     return [];
+  }
+}
+
+/**
+ * Sync Excel data from OneDrive link and store in Supabase
+ * Called after admin updates the OneDrive link
+ */
+export async function syncFromOneDriveLink(
+  directLink: string
+): Promise<SyncResult> {
+  try {
+    if (!directLink || !directLink.startsWith('http')) {
+      throw new Error('Invalid OneDrive link format');
+    }
+
+    console.log('📥 Syncing from OneDrive link:', directLink);
+
+    // Convert OneDrive share link to download URL
+    // Share link: https://1drv.ms/x/c/...
+    // Download URL: https://1drv.ms/x/c/...?download=1
+    const downloadUrl = directLink.includes('?') 
+      ? `${directLink}&download=1` 
+      : `${directLink}?download=1`;
+
+    // Fetch the Excel file
+    const response = await fetch(downloadUrl);
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch from OneDrive (${response.status}). ` +
+        `Make sure the link is correct and the file is shared.`
+      );
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+
+    // Find sheets
+    const steamSheetName = workbook.SheetNames.find(
+      name =>
+        name.toLowerCase().includes('ngsteam') ||
+        name.toLowerCase().includes('steam')
+    );
+
+    const waterSheetName = workbook.SheetNames.find(
+      name =>
+        name.toLowerCase().includes('water') ||
+        name.toLowerCase().includes('ratio')
+    );
+
+    if (!steamSheetName || !waterSheetName) {
+      throw new Error(
+        'Could not find NGSTEAM RATIO or WATER_STEAM RATIO sheets in Excel file'
+      );
+    }
+
+    // Parse sheets
+    const steamSheet = workbook.Sheets[steamSheetName];
+    const waterSheet = workbook.Sheets[waterSheetName];
+
+    const steamParsed = parseNGSteamSheet(steamSheet);
+    const waterParsed = parseWaterSteamSheet(waterSheet);
+
+    // Store in Supabase
+    await storeBoilerReading({
+      b1_steam: steamParsed.b1.steam,
+      b2_steam: steamParsed.b2.steam,
+      b3_steam: steamParsed.b3.steam,
+      b1_water: waterParsed.b1Water,
+      b2_water: waterParsed.b2Water,
+      b3_water: waterParsed.b3Water,
+      ng_ratio: steamParsed.b1.ng,
+      timestamp: new Date().toISOString(),
+    });
+
+    console.log('✅ Data synced successfully from OneDrive');
+
+    return {
+      success: true,
+      message: '✅ Data synced successfully from OneDrive link',
+      rowsProcessed: 1,
+    };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ Error syncing from OneDrive:', errorMsg);
+    throw error;
   }
 }
