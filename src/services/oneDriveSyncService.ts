@@ -1,4 +1,4 @@
-import { supabase, storeBoilerReading } from './supabaseService';
+import { supabase } from './supabaseService';
 import { parseNGSteamSheet, parseWaterSteamSheet } from './oneDriveService_v2';
 import * as XLSX from 'xlsx';
 
