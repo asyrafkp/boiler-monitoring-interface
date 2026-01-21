@@ -35,7 +35,7 @@ export const AdminPanel: React.FC = () => {
     if (!file) return;
 
     setIsLoading(true);
-    setStatusMessage('⏳ Syncing data...';
+    setStatusMessage('⏳ Syncing data...');
     setUploadStatus(null);
 
     try {
