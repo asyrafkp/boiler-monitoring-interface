@@ -1,7 +1,7 @@
 {
   "boilerId": 2,
   "boilerName": "Boiler No. 2",
-  "lastUpdate": "2026-01-21T06:32:46.760Z",
+  "lastUpdate": "2026-01-21T07:40:06.478Z",
   "hourlyData": {
     "1/1/2026": [
       {
@@ -9494,7 +9494,7 @@
         "time": "07:00",
         "steam": 515324,
         "water": 573783,
-        "electricT1": 1.6111,
+        "electricT1": 1.1612,
         "electricT2": 1.137,
         "electricTotal": 0,
         "ngBurner1": 451480,

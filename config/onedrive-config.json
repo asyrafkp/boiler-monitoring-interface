@@ -1,12 +1,10 @@
 {
   "onedrive": {
-    "folder_link": "https://1drv.ms/f/c/B6A282DAF4E2A35F/IgDut87lcIP0QYgkXmaSdS71AZDxNKdtobdFZwBNOu4j9uU?e=kNphIz",
-    "description": "OneDrive folder containing Year/Month structure with Excel files",
+    "folder_link": "https://1drv.ms/x/c/B6A282DAF4E2A35F/IQCEQ8XPs7EnQZQONh7zYtWzASqM_JrM94DtGUYl_Px9ygA?e=EEiekq",
+    "description": "OneDrive direct file link to boiler_data.xlsx",
     "structure": {
-      "level_1": "Year (e.g., 2026)",
-      "level_2": "Month (e.g., January)",
-      "file_pattern": "*.xlsx"
+      "file_name": "boiler_data.xlsx"
     },
-    "notes": "GitHub Actions workflow will automatically download the latest month's Excel file and store in data/boiler_data.xlsx"
+    "notes": "GitHub Actions workflow will automatically download the latest Excel file from OneDrive and generate JSON files hourly"
   }
 }
