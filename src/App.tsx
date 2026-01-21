@@ -311,15 +311,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
               Source: <strong>📊 GitHub (Auto-updated)</strong>
             </span>
           </div>
-        <loading && <div className="loading-indicator">📡 Loading boiler data...</div>}
+        </div>
+      </header>
+
+      <main className="main-content">
+        {loading && <div className="loading-indicator">📡 Loading boiler data...</div>}
 
         <StatusOverview boilers={boilers} />
 
-        <CumulativeDailyData cumulativeData={cumulativeDataata={cumulativeData} />
-
-        <loading && <div className="loading-indicator">📡 Loading boiler data...</div>}
-
-        <StatusOverview boilers={boilers} />
+        <CumulativeDailyData cumulativeData={cumulativeData} />
 
         <section className="boilers-grid">
           {boilers.map((boiler) => (
