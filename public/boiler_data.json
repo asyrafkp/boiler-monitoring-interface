@@ -1,31 +1,31 @@
 {
-  "timestamp": "2026-01-21T04:05:20.987Z",
-  "lastUpdate": "01/21/2026, 12:05:20 PM",
+  "timestamp": "2026-01-21T04:06:22.806Z",
+  "lastUpdate": "01/21/2026, 12:06:22 PM",
   "boilers": [
     {
       "id": 1,
       "name": "Boiler No. 1",
-      "steam": 9.2,
-      "ng": 4.5,
-      "ratio": 0.52,
-      "water": 16.5,
+      "steam": -323121,
+      "ng": 1.4546219849280164,
+      "ratio": -515358,
+      "water": -51419.90740740741,
       "maxCapacity": 18
     },
     {
       "id": 2,
       "name": "Boiler No. 2",
-      "steam": 8.1,
-      "ng": 4.1,
-      "ratio": 0.51,
-      "water": 0.51,
+      "steam": 1.3605144385068244,
+      "ng": -2863100,
+      "ratio": 0,
+      "water": 1857,
       "maxCapacity": 18
     },
     {
       "id": 3,
       "name": "Boiler No. 3",
-      "steam": 7,
-      "ng": 3.5,
-      "ratio": 0.5,
+      "steam": 0,
+      "ng": 0,
+      "ratio": 0,
       "water": 0,
       "maxCapacity": 16
     }

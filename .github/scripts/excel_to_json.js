@@ -45,30 +45,34 @@ const waterSheet = workbook.Sheets[waterSheetName];
 function parseNGSteamSheet(worksheet) {
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
   
-  for (let i = data.length - 1; i >= 0; i--) {
+  // Start from row 9 (after headers at row 6-8)
+  for (let i = data.length - 1; i >= 9; i--) {
     const row = data[i];
-    if (!row || row.length < 15) continue;
+    if (!row || row.length < 14) continue;
     
-    const b1Steam = parseFloat(row[4]) || 0;
-    const b2Steam = parseFloat(row[9]) || 0;
-    const b3Steam = parseFloat(row[14]) || 0;
+    // Columns: DATE(1), TIME(2), B1_STEAM(3), B1_NG(4), B1_RATIO(5), B1_OUTPUT(6),
+    //          B2_STEAM(7), B2_NG(8), B2_RATIO(9), B2_OUTPUT(10),
+    //          B3_STEAM(11), B3_NG(12), B3_RATIO(13), B3_OUTPUT(14)
+    const b1Steam = parseFloat(row[3]) || 0;
+    const b2Steam = parseFloat(row[7]) || 0;
+    const b3Steam = parseFloat(row[11]) || 0;
     
     if (b1Steam > 0 || b2Steam > 0 || b3Steam > 0) {
       return {
         b1: {
           steam: b1Steam,
-          ng: parseFloat(row[5]) || 0,
-          ratio: parseFloat(row[7]) || 0,
+          ng: parseFloat(row[4]) || 0,
+          ratio: parseFloat(row[5]) || 0,
         },
         b2: {
           steam: b2Steam,
-          ng: parseFloat(row[10]) || 0,
-          ratio: parseFloat(row[12]) || 0,
+          ng: parseFloat(row[8]) || 0,
+          ratio: parseFloat(row[9]) || 0,
         },
         b3: {
           steam: b3Steam,
-          ng: parseFloat(row[15]) || 0,
-          ratio: parseFloat(row[17]) || 0,
+          ng: parseFloat(row[12]) || 0,
+          ratio: parseFloat(row[13]) || 0,
         },
       };
     }
@@ -83,13 +87,15 @@ function parseNGSteamSheet(worksheet) {
 function parseWaterSteamSheet(worksheet) {
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
   
-  for (let i = data.length - 1; i >= 0; i--) {
+  // Start from row 8 (after headers at row 5-7)
+  for (let i = data.length - 1; i >= 8; i--) {
     const row = data[i];
-    if (!row || row.length < 15) continue;
+    if (!row || row.length < 17) continue;
     
-    const b1Water = parseFloat(row[6]) || 0;
-    const b2Water = parseFloat(row[12]) || 0;
-    const b3Water = parseFloat(row[18]) || 0;
+    // Water columns: B1(4), B2(10), B3(16)
+    const b1Water = parseFloat(row[4]) || 0;
+    const b2Water = parseFloat(row[10]) || 0;
+    const b3Water = parseFloat(row[16]) || 0;
     
     if (b1Water > 0 || b2Water > 0 || b3Water > 0) {
       return {
