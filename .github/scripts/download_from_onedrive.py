@@ -71,6 +71,10 @@ try:
                      'vnd.ms-excel' in response.headers.get('content-type', ''))
                 )
                 
+                # Detailed diagnostics
+                print(f"  Magic bytes: {content[:4].hex() if len(content) > 4 else 'N/A'}")
+                print(f"  Is valid Excel: {is_valid_excel}")
+                
                 if is_valid_excel:
                     with open('data/boiler_data.xlsx', 'wb') as f:
                         f.write(content)
@@ -79,9 +83,15 @@ try:
                     file_downloaded = True
                     break
                 else:
-                    print(f"  ⚠️ Response doesn't look like Excel file")
-                    if content_size < 500:
-                        print(f"  Content preview: {content[:200]}")
+                    print(f"  ⚠️ Response doesn't look like Excel file (size: {content_size})")
+                    if content_size < 1000:
+                        try:
+                            content_preview = content.decode('utf-8', errors='ignore')[:200]
+                            print(f"  Content preview: {content_preview}")
+                            if '<html' in content_preview.lower():
+                                print("  ⚠️ Received HTML response - OneDrive link may be incorrect or expired")
+                        except:
+                            print(f"  First bytes: {content[:50]}")
                         
         except requests.exceptions.RequestException as e:
             print(f"  ⚠️ Request failed: {str(e)[:80]}")
