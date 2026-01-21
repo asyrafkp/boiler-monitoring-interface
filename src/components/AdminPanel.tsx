@@ -35,11 +35,14 @@ export const AdminPanel: React.FC = () => {
     if (!file) return;
 
     setIsLoading(true);
-    setStatusMessage('Syncing data...');
+    setStatusMessage('⏳ Syncing data...';
     setUploadStatus(null);
 
     try {
+      console.log(`📁 Selected file: ${file.name} (${file.size} bytes)`);
       const arrayBuffer = await file.arrayBuffer();
+      console.log('✓ File read as ArrayBuffer');
+      
       const result = await syncOneDriveExcelToSupabase(arrayBuffer, file.name);
 
       setStatusMessage(`✅ ${result.message}`);
@@ -54,7 +57,10 @@ export const AdminPanel: React.FC = () => {
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      setStatusMessage(`❌ Sync failed: ${errorMsg}`);
+      console.error('❌ Upload error:', errorMsg);
+      console.error('Full error:', error);
+      
+      setStatusMessage(`❌ ${errorMsg}`);
       setUploadStatus('error');
     } finally {
       setIsLoading(false);
