@@ -60,7 +60,6 @@ export async function updateAdminSetting(
       console.error('Error details:', {
         message: error.message,
         code: error.code,
-        status: error.status,
       });
       throw new Error(error.message || 'Failed to update setting');
     }
