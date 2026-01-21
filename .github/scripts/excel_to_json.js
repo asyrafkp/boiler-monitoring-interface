@@ -48,7 +48,7 @@ function parseNGSteamSheet(worksheet) {
   // Start from row 9 (after headers at row 6-8)
   for (let i = data.length - 1; i >= 9; i--) {
     const row = data[i];
-    if (!row || row.length < 14) continue;
+    if (!row || row.length < 12) continue;  // Reduced from 14 to 12
     
     // Columns: DATE(1), TIME(2), B1_STEAM(3), B1_NG(4), B1_RATIO(5), B1_OUTPUT(6),
     //          B2_STEAM(7), B2_NG(8), B2_RATIO(9), B2_OUTPUT(10),
