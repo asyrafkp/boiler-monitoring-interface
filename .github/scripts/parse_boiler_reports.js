@@ -109,7 +109,9 @@ function parseReportB3(worksheet, boilerNum) {
     const naturalGas = Math.max(0, parseFloat(row[4]) || 0);
     const ngPerTonneSteam = Math.max(0, parseFloat(row[5]) || 0);
     // Electric columns: T1 (6), T2 (7), TOTAL (8)
-    const electric = Math.max(0, parseFloat(row[8]) || 0);
+    // NOTE: Boiler 3 electrical data is in kW, convert to MWh by dividing by 1000
+    const electricRaw = Math.max(0, parseFloat(row[8]) || 0);
+    const electric = electricRaw / 1000; // Convert kW to MWh for Boiler 3
     const electricPerTonne = Math.max(0, parseFloat(row[9]) || 0);
     // Note: B3 sheet doesn't have waste gas column based on image
     const wasteGas = 0;

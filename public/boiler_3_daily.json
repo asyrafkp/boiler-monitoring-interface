@@ -1,7 +1,7 @@
 {
   "boilerId": 3,
   "boilerName": "Boiler No. 3",
-  "lastUpdate": "2026-01-21T07:40:05.629Z",
+  "lastUpdate": "2026-01-21T07:43:26.458Z",
   "dailyData": [
     {
       "date": "1/1/2026",
@@ -10,7 +10,7 @@
       "waterPerTonneSteam": 0.8494623655913979,
       "naturalGas": 8663,
       "ngPerTonneSteam": 46.575268817204304,
-      "electric": 843.73,
+      "electric": 0.84373,
       "wasteGas": 0
     },
     {
@@ -20,7 +20,7 @@
       "waterPerTonneSteam": 0.8539325842696629,
       "naturalGas": 8311,
       "ngPerTonneSteam": 46.69101123595506,
-      "electric": 828.37,
+      "electric": 0.82837,
       "wasteGas": 0
     },
     {
@@ -30,7 +30,7 @@
       "waterPerTonneSteam": 0.8546511627906976,
       "naturalGas": 8058,
       "ngPerTonneSteam": 46.848837209302324,
-      "electric": 818.2600000000001,
+      "electric": 0.8182600000000001,
       "wasteGas": 0
     },
     {
@@ -40,7 +40,7 @@
       "waterPerTonneSteam": 0.8666666666666667,
       "naturalGas": 7210,
       "ngPerTonneSteam": 48.06666666666667,
-      "electric": 779.2999999999997,
+      "electric": 0.7792999999999998,
       "wasteGas": 0
     },
     {
@@ -50,7 +50,7 @@
       "waterPerTonneSteam": 0.8823529411764706,
       "naturalGas": 4971,
       "ngPerTonneSteam": 48.73529411764706,
-      "electric": 539.6200000000001,
+      "electric": 0.5396200000000001,
       "wasteGas": 0
     },
     {
@@ -60,7 +60,7 @@
       "waterPerTonneSteam": 0.9909502262443439,
       "naturalGas": 11572,
       "ngPerTonneSteam": 52.36199095022624,
-      "electric": 1000.8700000000001,
+      "electric": 1.0008700000000001,
       "wasteGas": 0
     },
     {
@@ -70,7 +70,7 @@
       "waterPerTonneSteam": 0.928030303030303,
       "naturalGas": 12865,
       "ngPerTonneSteam": 48.73106060606061,
-      "electric": 1049.1,
+      "electric": 1.0491,
       "wasteGas": 0
     },
     {
@@ -80,7 +80,7 @@
       "waterPerTonneSteam": 0.8780487804878049,
       "naturalGas": 1857,
       "ngPerTonneSteam": 45.292682926829265,
-      "electric": 124.90000000000009,
+      "electric": 0.1249000000000001,
       "wasteGas": 0
     },
     {
@@ -90,7 +90,7 @@
       "waterPerTonneSteam": 0.895738203957382,
       "naturalGas": 63507,
       "ngPerTonneSteam": 48.3310502283105,
-      "electric": 5984.15,
+      "electric": 5.98415,
       "wasteGas": 0
     }
   ]
