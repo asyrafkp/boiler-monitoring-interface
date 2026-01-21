@@ -1,11 +1,11 @@
 {
   "name": "boiler-operation-monitoring-interface",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "rm -rf dist && tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
