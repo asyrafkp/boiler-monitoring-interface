@@ -22,11 +22,18 @@ export const AdminSettings: React.FC = () => {
   const loadSettings = async () => {
     try {
       const link = await getOneDriveLink();
-      setOneDriveLink(link);
-      setTempLink(link);
+      if (link) {
+        setOneDriveLink(link);
+        setTempLink(link);
+      } else {
+        setOneDriveLink('');
+        setTempLink('');
+      }
     } catch (error) {
       console.error('Error loading settings:', error);
-      setMessage('Failed to load settings');
+      setOneDriveLink('');
+      setTempLink('');
+      setMessage('Settings not yet configured');
       setMessageType('error');
     }
   };
