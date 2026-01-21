@@ -323,19 +323,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
 
       {user?.userType === 'admin' && (
         <>
-          <div style={{position: 'fixed', top: '10px', left: '10px', backgroundColor: 'red', color: 'white', padding: '10px', zIndex: 9999}}>
-            ADMIN MODE ACTIVE - TEST
+          <div style={{position: 'fixed', top: '10px', left: '10px', backgroundColor: 'yellow', color: 'black', padding: '20px', zIndex: 99999, fontSize: '20px', fontWeight: 'bold', border: '3px solid black'}}>
+            🟡 ADMIN IS LOGGED IN 🟡
           </div>
-          <AdminPanel />
-          <AdminSettings />
         </>
       )}
       
-      <div style={{position: 'fixed', top: '10px', right: '10px', backgroundColor: '#333', color: '#0f0', padding: '10px', zIndex: 9999, fontFamily: 'monospace', fontSize: '12px', maxWidth: '300px'}}>
-        <div>⚠️ DEBUG MODE ACTIVE</div>
-        <div>user object: {JSON.stringify(user)}</div>
-        <div>userType: {user?.userType}</div>
-        <div>condition met: {user?.userType === 'admin' ? 'YES' : 'NO'}</div>
+      <div style={{position: 'fixed', bottom: '20px', right: '20px', width: '70px', height: '70px', borderRadius: '50%', backgroundColor: 'orange', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', zIndex: 999}}>
+        🔧
       </div>
     </div>
   )
