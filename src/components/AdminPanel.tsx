@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { syncOneDriveExcelToSupabase, getSyncHistory } from '../services/oneDriveSyncService';
 import { AdminSettings } from './AdminSettings';
 import { DataValidation } from './DataValidation';
+import { DashboardCustomization } from './DashboardCustomization';
 import './AdminPanel.css';
 
 interface SyncLog {
@@ -26,7 +27,7 @@ interface AdminPanelProps {
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState<'health' | 'data' | 'validation' | 'settings'>('health');
+  const [activeTab, setActiveTab] = useState<'health' | 'data' | 'validation' | 'customization' | 'settings'>('health');
   const [isLoading, setIsLoading] = useState(false);
   const [syncLogs, setSyncLogs] = useState<SyncLog[]>([]);
   const [statusMessage, setStatusMessage] = useState('');
@@ -170,6 +171,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 onClick={() => setActiveTab('validation')}
               >
                 📋 Data Validation
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'customization' ? 'active' : ''}`}
+                onClick={() => setActiveTab('customization')}
+              >
+                🎨 Customization
               </button>
               <button 
                 className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
@@ -379,6 +386,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             {activeTab === 'validation' && (
               <div className="tab-content">
                 <DataValidation />
+              </div>
+            )}
+
+            {/* Customization Tab */}
+            {activeTab === 'customization' && (
+              <div className="tab-content">
+                <DashboardCustomization />
               </div>
             )}
 
