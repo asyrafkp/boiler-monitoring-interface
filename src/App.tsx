@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage'
 import BoilerCard from './components/BoilerCard'
 import StatusOverview from './components/StatusOverview'
 import BoilerDetailModal from './components/BoilerDetailModal'
+import CumulativeDailyData from './components/CumulativeDailyData'
 
 interface BoilerData {
   id: number
@@ -16,6 +17,15 @@ interface BoilerData {
   water: number
   maxCapacity: number
   status: 'normal' | 'warning' | 'critical' | 'offline'
+}
+
+interface CumulativeData {
+  date: string
+  steam: number
+  water: number
+  naturalGas: number
+  electric: number
+  wasteGas: number
 }
 
 const App: React.FC = () => {
@@ -77,6 +87,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedBoiler, setSelectedBoiler] = useState<BoilerData | null>(null)
+  const [cumulativeData, setCumulativeData] = useState<CumulativeData | null>(null)
 
   // Format date for display
   const formatUpdateTime = () => {
@@ -119,6 +130,49 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
     }
   }
 
+  // Fetch cumulative daily data from all boilers
+  const fetchCumulativeData = async () => {
+    try {
+      const cacheBuster = `?v=${Date.now()}`
+      let totalSteam = 0
+      let totalWater = 0
+      let totalNG = 0
+      let totalElec = 0
+      let totalWG = 0
+      let latestDate = ''
+
+      for (let i = 1; i <= 3; i++) {
+        const response = await fetch(`/boiler-monitoring-interface/boiler_${i}_daily.json${cacheBuster}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.dailyData && data.dailyData.length > 1) {
+            // Get second last entry (last entry is usually TOTAL)
+            const latestDayData = data.dailyData[data.dailyData.length - 2]
+            if (latestDayData && latestDayData.date !== 'TOTAL') {
+              totalSteam += latestDayData.steam || 0
+              totalWater += latestDayData.water || 0
+              totalNG += latestDayData.naturalGas || 0
+              totalElec += latestDayData.electric || 0
+              totalWG += latestDayData.wasteGas || 0
+              latestDate = latestDayData.date
+            }
+          }
+        }
+      }
+
+      setCumulativeData({
+        date: latestDate,
+        steam: totalSteam,
+        water: totalWater,
+        naturalGas: totalNG,
+        electric: totalElec,
+        wasteGas: totalWG
+      })
+    } catch (err) {
+      console.error('❌ Error fetching cumulative data:', err)
+    }
+  }
+
   // Fetch data from GitHub Pages JSON file
   const fetchBoilerData = async () => {
     setLoading(true)
@@ -145,8 +199,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
         steam: boiler.steam,
         ng: boiler.ng,
         ratio: boiler.ratio,
-        output: (boiler.steam / boiler.maxCapacity) * 100,
-        water: boiler.water,
+    fetchCumulativeData()
+
+    const refreshInterval = setInterval(() => {
+      fetchBoilerData()
+      fetchCumulativeData()
+    }
         maxCapacity: boiler.maxCapacity,
         status: determineStatus(boiler.steam, boiler.maxCapacity)
       }))
@@ -257,7 +315,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
       </header>
 
       <main className="main-content">
-        {loading && <div className="loading-indicator">📡 Loading boiler data...</div>}
+        {CumulativeDailyData cumulativeData={cumulativeData} />
+
+        <loading && <div className="loading-indicator">📡 Loading boiler data...</div>}
 
         <StatusOverview boilers={boilers} />
 
