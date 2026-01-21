@@ -1,15 +1,55 @@
-import { supabase } from './supabaseService';
 import { parseNGSteamSheet, parseWaterSteamSheet } from './oneDriveService_v2';
 import * as XLSX from 'xlsx';
 
-interface SyncResult {
+export interface SyncResult {
   success: boolean;
   rowsProcessed: number;
   message: string;
   timestamp: string;
 }
 
-// Sync OneDrive Excel file to Supabase
+export interface SyncLog {
+  id: number;
+  file_name: string;
+  upload_date: string;
+  rows_processed: number;
+  status: string;
+  sync_type: string;
+}
+
+// In-memory sync history
+let syncHistory: SyncLog[] = [];
+let syncIdCounter = 1;
+
+// Load sync history from localStorage on startup
+function loadSyncHistory() {
+  try {
+    const stored = localStorage.getItem('sync_history');
+    if (stored) {
+      syncHistory = JSON.parse(stored);
+      // Find max id for counter
+      const maxId = Math.max(...syncHistory.map(s => s.id), 0);
+      syncIdCounter = maxId + 1;
+    }
+  } catch (error) {
+    console.warn('Could not load sync history from localStorage:', error);
+    syncHistory = [];
+  }
+}
+
+// Save sync history to localStorage
+function saveSyncHistory() {
+  try {
+    localStorage.setItem('sync_history', JSON.stringify(syncHistory));
+  } catch (error) {
+    console.warn('Could not save sync history to localStorage:', error);
+  }
+}
+
+// Initialize on import
+loadSyncHistory();
+
+// Sync OneDrive Excel file and log to local storage
 export async function syncOneDriveExcelToSupabase(
   fileContent: ArrayBuffer,
   fileName: string
@@ -59,45 +99,24 @@ export async function syncOneDriveExcelToSupabase(
       b3_water: waterParsed.b3Water,
     });
 
-    // Store in Supabase
-    console.log('💾 Storing in Supabase...');
-    const { error: storeError } = await supabase
-      .from('boiler_readings')
-      .insert([
-        {
-          b1_steam: steamParsed.b1.steam,
-          b2_steam: steamParsed.b2.steam,
-          b3_steam: steamParsed.b3.steam,
-          b1_water: waterParsed.b1Water,
-          b2_water: waterParsed.b2Water,
-          b3_water: waterParsed.b3Water,
-          ng_ratio: steamParsed.b1.ng,
-          created_at: new Date().toISOString(),
-        },
-      ]);
-
-    if (storeError) {
-      throw new Error(`Supabase store error: ${storeError.message}`);
-    }
-
-    console.log('✅ Data stored successfully');
-
-    // Log upload to admin_uploads table
+    // Log to local sync history
     const steamData = XLSX.utils.sheet_to_json(steamSheet);
-    const { error: uploadLogError } = await supabase
-      .from('admin_uploads')
-      .insert([
-        {
-          file_name: fileName,
-          uploaded_by: 'admin',
-          rows_processed: steamData.length,
-          status: 'success',
-        },
-      ]);
-
-    if (uploadLogError) {
-      console.warn('Warning: Could not log upload:', uploadLogError);
+    const syncLog: SyncLog = {
+      id: syncIdCounter++,
+      file_name: fileName,
+      upload_date: new Date().toISOString(),
+      rows_processed: steamData.length,
+      status: 'success',
+      sync_type: 'manual'
+    };
+    syncHistory.unshift(syncLog);
+    // Keep only last 50 syncs
+    if (syncHistory.length > 50) {
+      syncHistory = syncHistory.slice(0, 50);
     }
+    saveSyncHistory();
+    
+    console.log('✅ Data parsed and sync logged successfully');
 
     return {
       success: true,
@@ -110,38 +129,37 @@ export async function syncOneDriveExcelToSupabase(
     console.error('❌ Sync error:', errorMsg);
     console.error('Full error:', error);
     
-    // Log failed upload
-    try {
-      await supabase
-        .from('admin_uploads')
-        .insert([
-          {
-            file_name: fileName,
-            uploaded_by: 'admin',
-            rows_processed: 0,
-            status: 'failed',
-          },
-        ]);
-    } catch (logError) {
-      console.warn('Could not log failed upload:', logError);
-    }
+    // Log failed sync
+    const syncLog: SyncLog = {
+      id: syncIdCounter++,
+      file_name: fileName,
+      upload_date: new Date().toISOString(),
+      rows_processed: 0,
+      status: 'failed',
+      sync_type: 'manual'
+    };
+    syncHistory.unshift(syncLog);
+    saveSyncHistory();
 
     throw new Error(errorMsg);
   }
 }
 
 // Get sync history
-export async function getSyncHistory(limit: number = 10) {
-  const { data, error } = await supabase
-    .from('admin_uploads')
-    .select('*')
-    .order('upload_date', { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    console.error('Error fetching sync history:', error);
-    throw error;
-  }
-
-  return data || [];
+export async function getSyncHistory(limit: number = 10): Promise<SyncLog[]> {
+  loadSyncHistory();
+  return syncHistory.slice(0, limit);
 }
+
+// Add OneDrive sync to history (called from GitHub workflow via JSON update)
+export function addSyncHistory(entry: Omit<SyncLog, 'id'>): SyncLog {
+  const syncLog: SyncLog = {
+    id: syncIdCounter++,
+    ...entry
+  };
+  syncHistory.unshift(syncLog);
+  if (syncHistory.length > 50) {
+    syncHistory = syncHistory.slice(0, 50);
+  }
+  saveSyncHistory();
+  return syncLog;

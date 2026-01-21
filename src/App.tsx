@@ -6,6 +6,7 @@ import BoilerCard from './components/BoilerCard'
 import StatusOverview from './components/StatusOverview'
 import BoilerDetailModal from './components/BoilerDetailModal'
 import CumulativeDailyData from './components/CumulativeDailyData'
+import { AdminPanel } from './components/AdminPanel'
 
 interface BoilerData {
   id: number
@@ -88,6 +89,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
   const [error, setError] = useState<string | null>(null)
   const [selectedBoiler, setSelectedBoiler] = useState<BoilerData | null>(null)
   const [cumulativeData, setCumulativeData] = useState<CumulativeData | null>(null)
+  const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false)
 
   // Format date for display
   const formatUpdateTime = () => {
@@ -307,6 +309,26 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
               }}>
                 {user.userType === 'admin' ? '👨‍💼' : '👤'} {user.username}
               </div>
+              {user.userType === 'admin' && (
+                <button
+                  onClick={() => setShowAdminPanel(!showAdminPanel)}
+                  style={{
+                    padding: '8px 12px',
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  ⚙️ Admin
+                </button>
+              )}
               <button
                 onClick={logout}
                 style={{
@@ -356,6 +378,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
           ))}
         </section>
       </main>
+
+      {showAdminPanel && user.userType === 'admin' && (
+        <AdminPanel onClose={() => setShowAdminPanel(false)} />
+      )}
 
       <footer className="app-footer">
         <p>📊 Latest Data Available: <strong>{latestDataTime}</strong></p>
