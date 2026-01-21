@@ -8,7 +8,8 @@ on:
 
 env:
   SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-  SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+  # IMPORTANT: Use Service Role Secret (not anon key) to bypass RLS policies
+  SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
 jobs:
   sync:

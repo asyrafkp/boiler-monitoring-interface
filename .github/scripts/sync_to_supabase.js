@@ -14,16 +14,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Get Supabase credentials from environment
 const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('❌ Missing Supabase environment variables');
-  console.error('   Please set SUPABASE_URL and SUPABASE_ANON_KEY secrets');
+  console.error('   Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY secrets');
   process.exit(1);
 }
 
-// Initialize Supabase client
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Initialize Supabase client with service role key
+// Service role key bypasses RLS policies for server-side operations
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 console.log('🔄 Syncing Excel data to Supabase...');
 
