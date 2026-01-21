@@ -25,7 +25,7 @@ const workbook = XLSX.readFile(excelPath);
 
 // Find steam and water sheets
 const steamSheetName = workbook.SheetNames.find(name => 
-  name.toLowerCase().includes('ngsteam') || name.toLowerCase().includes('steam')
+  name.toLowerCase().includes('ngsteam')
 );
 const waterSheetName = workbook.SheetNames.find(name => 
   name.toLowerCase().includes('water')
@@ -45,13 +45,16 @@ const waterSheet = workbook.Sheets[waterSheetName];
  */
 function parseNGSteamSheet(worksheet) {
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
+  
   // Start from row 9 (after headers at row 6-8)
   for (let i = data.length - 1; i >= 9; i--) {
     const row = data[i];
-    if (!row) continue;
+    if (!row || row.length < 11) continue;
     
-    // Column mapping: B1(3-6), B2(7-10), B3(11-14)
+    // Actual column mapping from real data:
+    // Col 2: TIME, Col 3-6: B1 (all at indices 3,4,5,6)
+    // Col 7-10: B2 (all at indices 7,8,9,10)
+    // Col 11-14: B3 (all at indices 11,12,13,14)
     const b1Steam = parseFloat(row[3]) || 0;
     const b2Steam = parseFloat(row[7]) || 0;
     const b3Steam = parseFloat(row[11]) || 0;
@@ -86,25 +89,6 @@ function parseNGSteamSheet(worksheet) {
 function parseWaterSteamSheet(worksheet) {
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
   
-  console.log('DEBUG Water sheet: Total rows:', data.length);
-  
-  // Start from row 8 (after headers at row 5-7)
-  for (let i = data.length - 1; i >= 8; i--) {
-    const row = data[i];
-    if (!row) continue;
-    
-    // Debug first few iterations
-    if (i > data.length - 5 || i === 554) {
-      console.log(`DEBUG Water row ${i}: length=${row.length}, col4=${row[4]}, col10=${row[10]}, col16=${row[16]}`);
-    }
-    
-    if (row.length < 17) continue;
-    
-    // Water columns: B1(4), B2(10), B3(16)
-    const b1Water = parseFloat(row[4]) || 0;
-    const b2Water = parseFloat(row[10]) || 0;
-    const b3Water = parseFloat(row[16]) || 0;
-    
   // Start from row 8 (after headers at row 5-7)
   for (let i = data.length - 1; i >= 8; i--) {
     const row = data[i];
@@ -124,6 +108,25 @@ function parseWaterSteamSheet(worksheet) {
     }
   }
   
+  return null;
+}
+
+// Parse data
+const steamData = parseNGSteamSheet(steamSheet);
+const waterData = parseWaterSteamSheet(waterSheet);
+
+if (!steamData || !waterData) {
+  console.error('❌ No valid data found in Excel');
+  process.exit(1);
+}
+
+// Create JSON output
+const jsonData = {
+  timestamp: new Date().toISOString(),
+  lastUpdate: new Date().toLocaleString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
