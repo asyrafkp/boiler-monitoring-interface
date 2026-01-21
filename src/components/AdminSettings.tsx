@@ -62,24 +62,38 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ onSyncComplete }) 
       await updateOneDriveLink(tempLink, 'admin');
       setOneDriveLink(tempLink);
       
-      // Auto-sync data from the new link
-      setMessage('⏳ Syncing data from new link...');
+      // Try to auto-sync data from the new link
+      setMessage('⏳ Attempting to sync data from OneDrive...');
       setMessageType('error'); // Use error style for neutral color
       
-      await syncFromOneDriveLink(tempLink);
-      
-      setMessage('✅ Link saved and data synced successfully!');
-      setMessageType('success');
-      
-      // Trigger parent callback to refresh dashboard
-      if (onSyncComplete) {
-        onSyncComplete();
+      try {
+        await syncFromOneDriveLink(tempLink);
+        setMessage('✅ Link saved and data synced successfully!');
+        setMessageType('success');
+        
+        // Trigger parent callback to refresh dashboard
+        if (onSyncComplete) {
+          onSyncComplete();
+        }
+      } catch (syncError) {
+        const errorMsg = syncError instanceof Error ? syncError.message : 'Unknown error';
+        
+        // Check if it's a CORS error
+        if (errorMsg.includes('NetworkError') || errorMsg.includes('CORS')) {
+          setMessage(
+            '⚠️ Link saved, but browser cannot directly sync from OneDrive (CORS restriction). ' +
+            'Please use Admin Panel to manually upload the Excel file instead.'
+          );
+          setMessageType('error');
+        } else {
+          throw syncError;
+        }
       }
       
       setTimeout(() => {
         setMessage('');
         setMessageType(null);
-      }, 4000);
+      }, 5000);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error('Save link error:', errorMsg);
@@ -130,7 +144,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ onSyncComplete }) 
             </div>
 
             <div className="settings-section">
-              <h3>🔗 OneDrive Excel Link</h3>
+              <h3>🔗 OneDrive Excel Link (For Automation)</h3>
               <div className="setting-item">
                 <label htmlFor="onedrive-link">
                   Direct Link to Excel File:
@@ -145,6 +159,11 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ onSyncComplete }) 
                 />
                 <small className="help-text">
                   📝 Get link: OneDrive → Right-click file → Share → Copy link
+                </small>
+                <small className="help-text" style={{ color: '#d97706', marginTop: '8px', display: 'block' }}>
+                  ⚠️ <strong>Note:</strong> Browser cannot directly access OneDrive (CORS restriction). 
+                  This link is stored for GitHub Actions automation. 
+                  Use <strong>Admin Panel → Manual Upload</strong> to sync data now.
                 </small>
 
                 {message && (
