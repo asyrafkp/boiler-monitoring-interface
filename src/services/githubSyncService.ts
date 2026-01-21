@@ -21,29 +21,48 @@ export async function syncFromGitHub(): Promise<GitHubSyncResult> {
     const branch = 'main';
     const filePath = 'data/boiler_data.xlsx';
 
-    // GitHub raw content URL (works without authentication)
-    const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`;
+    // Try multiple CDN sources for better reliability
+    const urls = [
+      // jsDelivr CDN (often faster)
+      `https://cdn.jsdelivr.net/gh/${owner}/${repo}@${branch}/${filePath}`,
+      // GitHub raw content (primary source)
+      `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`,
+      // Ghproxy (backup mirror)
+      `https://ghproxy.com/https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`,
+    ];
 
-    console.log(`🔗 Fetching from GitHub: ${rawUrl}`);
+    let lastError = null;
+    let arrayBuffer = null;
 
-    // Fetch the file
-    const response = await fetch(rawUrl);
-    
-    console.log(`📡 GitHub Response Status: ${response.status} ${response.statusText}`);
-    console.log(`📡 Content-Type: ${response.headers.get('content-type')}`);
-    console.log(`📡 Content-Length: ${response.headers.get('content-length')}`);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ GitHub Error Response: ${errorText.substring(0, 200)}`);
+    // Try each URL until one works
+    for (const url of urls) {
+      try {
+        console.log(`🔗 Trying: ${url}`);
+        const response = await fetch(url, { timeout: 10000 });
+        
+        console.log(`📡 Response Status: ${response.status} ${response.statusText}`);
+        
+        if (response.ok) {
+          arrayBuffer = await response.arrayBuffer();
+          console.log(`✅ Downloaded ${arrayBuffer.byteLength} bytes from ${url.split('/')[2]}`);
+          break;
+        } else {
+          console.warn(`⚠️ Got ${response.status} from ${url}`);
+          lastError = new Error(`${response.status} ${response.statusText}`);
+        }
+      } catch (err) {
+        console.warn(`⚠️ Failed to fetch from ${url}:`, err instanceof Error ? err.message : err);
+        lastError = err;
+        continue;
+      }
+    }
+
+    if (!arrayBuffer) {
       throw new Error(
-        `Failed to fetch from GitHub (${response.status}). ` +
+        `Failed to fetch from all sources. Last error: ${lastError instanceof Error ? lastError.message : 'Unknown'}. ` +
         `Make sure ${filePath} exists in the ${branch} branch.`
       );
     }
-
-    const arrayBuffer = await response.arrayBuffer();
-    console.log(`✅ Downloaded ${arrayBuffer.byteLength} bytes from GitHub`);
     
     // Parse Excel file
     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
