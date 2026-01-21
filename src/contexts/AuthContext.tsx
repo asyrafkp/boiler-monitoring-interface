@@ -34,9 +34,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Load auth state from localStorage on mount
   useEffect(() => {
     const savedUser = localStorage.getItem('auth_user')
+    console.log('AuthContext useEffect running - savedUser:', savedUser)
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser)
+        console.log('Parsed user:', parsedUser)
         setUser(parsedUser)
       } catch (err) {
         console.error('Failed to parse stored auth user:', err)
