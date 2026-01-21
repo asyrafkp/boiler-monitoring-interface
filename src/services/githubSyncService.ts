@@ -24,12 +24,18 @@ export async function syncFromGitHub(): Promise<GitHubSyncResult> {
     // GitHub raw content URL (works without authentication)
     const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`;
 
-    console.log(`Fetching from GitHub: ${rawUrl}`);
+    console.log(`🔗 Fetching from GitHub: ${rawUrl}`);
 
     // Fetch the file
     const response = await fetch(rawUrl);
     
+    console.log(`📡 GitHub Response Status: ${response.status} ${response.statusText}`);
+    console.log(`📡 Content-Type: ${response.headers.get('content-type')}`);
+    console.log(`📡 Content-Length: ${response.headers.get('content-length')}`);
+    
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ GitHub Error Response: ${errorText.substring(0, 200)}`);
       throw new Error(
         `Failed to fetch from GitHub (${response.status}). ` +
         `Make sure ${filePath} exists in the ${branch} branch.`
@@ -37,6 +43,7 @@ export async function syncFromGitHub(): Promise<GitHubSyncResult> {
     }
 
     const arrayBuffer = await response.arrayBuffer();
+    console.log(`✅ Downloaded ${arrayBuffer.byteLength} bytes from GitHub`);
     
     // Parse Excel file
     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
