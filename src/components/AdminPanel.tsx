@@ -64,20 +64,10 @@ export const AdminPanel: React.FC = () => {
 
   const handleGitHubSync = async () => {
     setIsLoading(true);
-    setStatusMessage('Syncing from GitHub...');
-    setUploadStatus(null);
-
-    try {
-      const result = await syncFromGitHub();
-      setStatusMessage(result.message);
-      setUploadStatus('success');
-      
-      // Refresh sync history
-      await loadSyncHistory();
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      setStatusMessage(`❌ GitHub sync failed: ${errorMsg}`);
-      setUploadStatus('error');
+    setStatusMessage('⚠️ GitHub sync requires ONEDRIVE_LINK secret. Use Settings or Manual Upload instead.');
+    setUploadStatus('error');
+    setIsLoading(false);
+  };
     } finally {
       setIsLoading(false);
     }
@@ -143,32 +133,54 @@ export const AdminPanel: React.FC = () => {
             </div>
 
             <div className="admin-section">
-              <h3>� Sync from GitHub</h3>
+              <h3>🔗 Quick Start: Data Sync Options</h3>
+              <div className="sync-options">
+                <div className="option">
+                  <h4>✅ Option 1: OneDrive Link (Recommended)</h4>
+                  <ol>
+                    <li>Click the <strong>🔧 Settings</strong> button (bottom right)</li>
+                    <li>Paste your OneDrive Excel link</li>
+                    <li>Click <strong>Save Link</strong></li>
+                    <li>Data syncs automatically from your OneDrive file</li>
+                  </ol>
+                </div>
+                <div className="option">
+                  <h4>✅ Option 2: Manual Upload</h4>
+                  <ol>
+                    <li>Select Excel file above</li>
+                    <li>File uploads and data is stored in database</li>
+                    <li>Perfect for one-time uploads</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            <div className="admin-section">
+              <h3>⏱️ Automatic Hourly Sync</h3>
               <div className="github-sync">
                 <p className="sync-description">
-                  Automatically fetch and sync Excel data from your GitHub repository.
+                  To enable automatic hourly sync from OneDrive via GitHub Actions:
                 </p>
-                <button 
-                  className="github-sync-btn"
-                  onClick={handleGitHubSync}
-                  disabled={isLoading}
-                >
-                  {isLoading ? '⏳ Syncing...' : '📥 Sync from GitHub'}
-                </button>
                 <div className="github-info">
-                  <p><strong>Setup required first:</strong></p>
+                  <p><strong>Setup steps:</strong></p>
                   <ol>
-                    <li>Create a folder <code>data/</code> in your GitHub repo</li>
-                    <li>Upload <code>boiler_data.xlsx</code> to the <code>data/</code> folder</li>
-                    <li>Click the button to sync automatically</li>
+                    <li>Go to GitHub repo Settings → Secrets and variables → Actions</li>
+                    <li>Add secret: <code>ONEDRIVE_LINK</code> = your OneDrive Excel share link</li>
+                    <li>Add secret: <code>SUPABASE_URL</code> = your Supabase URL</li>
+                    <li>Add secret: <code>SUPABASE_ANON_KEY</code> = your Supabase anon key</li>
+                    <li>GitHub Actions will then sync hourly automatically</li>
                   </ol>
+                  <p className="setup-note">
+                    📌 <strong>For now:</strong> Use Settings (🔧) to update your OneDrive link - 
+                    it will sync data immediately!
+                  </p>
                   <p>
                     <a 
-                      href="https://github.com/asyrafkp/boiler-monitoring-interface" 
+                      href="https://github.com/asyrafkp/boiler-monitoring-interface/settings/secrets/actions" 
                       target="_blank" 
                       rel="noopener noreferrer"
                     >
-                      📂 Go to GitHub Repo →
+                      🔐 Go to GitHub Secrets →
                     </a>
                   </p>
                 </div>
