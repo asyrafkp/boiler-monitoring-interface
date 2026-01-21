@@ -9,6 +9,7 @@ interface BoilerData {
   output: number
   water: number
   status: 'normal' | 'warning' | 'critical' | 'offline'
+  maxCapacity?: number  // Optional max capacity field
 }
 
 interface StatusOverviewProps {
@@ -18,7 +19,11 @@ interface StatusOverviewProps {
 const StatusOverview: React.FC<StatusOverviewProps> = ({ boilers }) => {
   const totalSteam = boilers.reduce((sum, b) => sum + b.steam, 0)
   const totalNG = boilers.reduce((sum, b) => sum + b.ng, 0)
-  const avgOutput = boilers.reduce((sum, b) => sum + b.output, 0) / boilers.length
+  
+  // Calculate total system output as percentage of total capacity
+  const totalCapacity = boilers.reduce((sum, b) => sum + (b.maxCapacity || 18), 0)
+  const totalOutput = totalCapacity > 0 ? (totalSteam / totalCapacity) * 100 : 0
+  
   const criticalCount = boilers.filter(b => b.status === 'critical').length
   const warningCount = boilers.filter(b => b.status === 'warning').length
 
@@ -46,7 +51,7 @@ const StatusOverview: React.FC<StatusOverviewProps> = ({ boilers }) => {
         <div className="overview-icon">📊</div>
         <div className="overview-content">
           <span className="overview-label">Average Output</span>
-          <span className="overview-value">{avgOutput.toFixed(1)}</span>
+          <span className="overview-value">{totalOutput.toFixed(1)}</span>
           <span className="overview-unit">%</span>
         </div>
       </div>
