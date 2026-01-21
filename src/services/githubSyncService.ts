@@ -38,7 +38,7 @@ export async function syncFromGitHub(): Promise<GitHubSyncResult> {
     for (const url of urls) {
       try {
         console.log(`🔗 Trying: ${url}`);
-        const response = await fetch(url, { timeout: 10000 });
+        const response = await fetch(url);
         
         console.log(`📡 Response Status: ${response.status} ${response.statusText}`);
         
