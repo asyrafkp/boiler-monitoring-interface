@@ -42,6 +42,7 @@ const waterSheet = workbook.Sheets[waterSheetName];
 
 /**
  * Find latest non-zero row in steam sheet
+ * Returns data from the SAME row for all boilers
  */
 function parseNGSteamSheet(worksheet) {
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
@@ -59,8 +60,10 @@ function parseNGSteamSheet(worksheet) {
     const b2Steam = parseFloat(row[7]) || 0;
     const b3Steam = parseFloat(row[11]) || 0;
     
+    // Find the first row with ANY boiler data, then return ALL boilers from that SAME row
     if (b1Steam > 0 || b2Steam > 0 || b3Steam > 0) {
       return {
+        rowIndex: i, // Return row index so water data can use the same row
         b1: {
           steam: b1Steam,
           ng: parseFloat(row[4]) || 0,
@@ -84,38 +87,36 @@ function parseNGSteamSheet(worksheet) {
 }
 
 /**
- * Find latest non-zero water data
+ * Get water data from the SAME row as steam data
  */
-function parseWaterSteamSheet(worksheet) {
+function parseWaterSteamSheet(worksheet, rowIndex) {
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
   
-  // Limit search to row 540 to match steam data search range
-  const maxRow = Math.min(data.length - 1, 540);
-  
-  for (let i = maxRow; i >= 8; i--) {
-    const row = data[i];
-    if (!row || row.length < 18) continue;
-    
-    // Water columns: B1(3), B2(15), B3(17) based on row 533 analysis
-    const b1Water = parseFloat(row[3]) || 0;
-    const b2Water = parseFloat(row[15]) || 0;
-    const b3Water = parseFloat(row[17]) || 0;
-    
-    if (b1Water > 0 || b2Water > 0 || b3Water > 0) {
-      return {
-        b1Water,
-        b2Water,
-        b3Water,
-      };
-    }
+  // Use the SAME row index as steam data to ensure consistency
+  if (rowIndex < 0 || rowIndex >= data.length) {
+    return null;
   }
   
-  return null;
+  const row = data[rowIndex];
+  if (!row || row.length < 18) {
+    return null;
+  }
+  
+  // Water columns: B1(3), B2(15), B3(17) based on row 533 analysis
+  const b1Water = parseFloat(row[3]) || 0;
+  const b2Water = parseFloat(row[15]) || 0;
+  const b3Water = parseFloat(row[17]) || 0;
+  
+  return {
+    b1Water,
+    b2Water,
+    b3Water,
+  };
 }
 
-// Parse data
+// Parse data - ensure steam and water come from the SAME row
 const steamData = parseNGSteamSheet(steamSheet);
-const waterData = parseWaterSteamSheet(waterSheet);
+const waterData = steamData ? parseWaterSteamSheet(waterSheet, steamData.rowIndex) : null;
 
 if (!steamData || !waterData) {
   console.error('❌ No valid data found in Excel');
