@@ -82,7 +82,7 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
                       <th>Natural Gas (sm³)</th>
                       <th>NG/Tonne</th>
                       <th>Electric (MWh)</th>
-                      <th>Waste Gas (l\m³)</th>
+                      <th>Waste Gas (Nm³)</th>
                     </tr>
                   </thead>
                   <tbody>
