@@ -96,8 +96,8 @@ function parseWaterSteamSheet(worksheet) {
     const row = data[i];
     if (!row || row.length < 18) continue;
     
-    // Water columns: B1(9), B2(15), B3(17) based on actual data at row 533
-    const b1Water = parseFloat(row[9]) || 0;
+    // Water columns: B1(3), B2(15), B3(17) based on row 533 analysis
+    const b1Water = parseFloat(row[3]) || 0;
     const b2Water = parseFloat(row[15]) || 0;
     const b3Water = parseFloat(row[17]) || 0;
     
