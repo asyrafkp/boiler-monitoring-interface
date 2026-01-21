@@ -87,22 +87,6 @@ const LoginPage: React.FC = () => {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-
-        <div className="login-credentials">
-          <h3>{loginType === 'admin' ? '👨‍💼 Admin Credentials' : '👤 User Credentials'}</h3>
-          <p>
-            <strong>Username:</strong> {loginType === 'admin' ? 'admin' : 'user'}
-          </p>
-          <p>
-            <strong>Password:</strong> {loginType === 'admin' ? 'admin123' : 'user123'}
-          </p>
-          {loginType === 'admin' && (
-            <p className="admin-note">✨ Admin can access OneDrive integration</p>
-          )}
-          {loginType === 'user' && (
-            <p className="user-note">📊 User can view dashboard only</p>
-          )}
-        </div>
       </div>
     </div>
   )
