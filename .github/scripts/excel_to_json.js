@@ -50,29 +50,30 @@ function parseNGSteamSheet(worksheet) {
     const row = data[i];
     if (!row || row.length < 11) continue;
     
-    // Columns: A=DATE(0), B=TIME(1), C=B1_STEAM(2), D=B1_NG(3), E=B1_RATIO(4), F=B1_OUTPUT(5),
-    //          G=B2_STEAM(6), H=B2_NG(7), I=B2_RATIO(8), J=B2_OUTPUT(9),
-    //          K=B3_STEAM(10), L=B3_NG(11), M=B3_RATIO(12), N=B3_OUTPUT(13)
-    const b1Steam = parseFloat(row[2]) || 0;
-    const b2Steam = parseFloat(row[6]) || 0;
-    const b3Steam = parseFloat(row[10]) || 0;
+    // Actual column mapping from real data:
+    // Col 2: TIME, Col 3-6: B1 (all at indices 3,4,5,6)
+    // Col 7-10: B2 (all at indices 7,8,9,10)
+    // Col 11-14: B3 (all at indices 11,12,13,14)
+    const b1Steam = parseFloat(row[3]) || 0;
+    const b2Steam = parseFloat(row[7]) || 0;
+    const b3Steam = parseFloat(row[11]) || 0;
     
     if (b1Steam > 0 || b2Steam > 0 || b3Steam > 0) {
       return {
         b1: {
           steam: b1Steam,
-          ng: parseFloat(row[3]) || 0,
-          ratio: parseFloat(row[4]) || 0,
+          ng: parseFloat(row[4]) || 0,
+          ratio: parseFloat(row[5]) || 0,
         },
         b2: {
           steam: b2Steam,
-          ng: parseFloat(row[7]) || 0,
-          ratio: parseFloat(row[8]) || 0,
+          ng: parseFloat(row[8]) || 0,
+          ratio: parseFloat(row[9]) || 0,
         },
         b3: {
           steam: b3Steam,
-          ng: parseFloat(row[11]) || 0,
-          ratio: parseFloat(row[12]) || 0,
+          ng: parseFloat(row[12]) || 0,
+          ratio: parseFloat(row[13]) || 0,
         },
       };
     }
