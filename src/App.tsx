@@ -4,6 +4,8 @@ import { useAuth } from './contexts/AuthContext'
 import LoginPage from './pages/LoginPage'
 import BoilerCard from './components/BoilerCard'
 import StatusOverview from './components/StatusOverview'
+import { AdminPanel } from './components/AdminPanel'
+import { AdminSettings } from './components/AdminSettings'
 import { ONEDRIVE_CONFIG, getCurrentMonthFolderName } from './config/oneDriveConfig'
 import { fetchBoilerDataFromOneDrive } from './services/oneDriveService_v2'
 import { graphApiService } from './services/graphApiService'
@@ -321,15 +323,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
 
       {user?.userType === 'admin' && (
         <>
-          <div style={{position: 'fixed', top: '10px', left: '10px', backgroundColor: 'yellow', color: 'black', padding: '20px', zIndex: 99999, fontSize: '20px', fontWeight: 'bold', border: '3px solid black'}}>
-            🟡 ADMIN IS LOGGED IN 🟡
-          </div>
+          <AdminPanel />
+          <AdminSettings />
         </>
       )}
-      
-      <div style={{position: 'fixed', bottom: '20px', right: '20px', width: '70px', height: '70px', borderRadius: '50%', backgroundColor: 'orange', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', zIndex: 999}}>
-        🔧
-      </div>
     </div>
   )
 }
