@@ -145,13 +145,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       <div className="admin-modal">
         <div className="admin-modal-content">
           <div className="admin-header">
-            <h2>Admin Panel</h2>
-            <button 
-              className="close-btn"
-              onClick={onClose}
-            >
-              ✕
-            </button>
+            <h2>⚙️ Admin Panel</h2>
+            {onClose && (
+              <button 
+                className="close-btn"
+                onClick={onClose}
+                style={{ display: 'block' }}
+              >
+                ✕
+              </button>
+            )}
           </div>
 
             {/* Tab Navigation */}

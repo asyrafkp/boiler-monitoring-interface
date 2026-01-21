@@ -91,7 +91,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
   const [error, setError] = useState<string | null>(null)
   const [selectedBoiler, setSelectedBoiler] = useState<BoilerData | null>(null)
   const [cumulativeData, setCumulativeData] = useState<CumulativeData | null>(null)
-  const [showAdminPanel, setShowAdminPanel] = useState<boolean>(false)
+  const [activeView, setActiveView] = useState<'dashboard' | 'admin'>('dashboard')
 
   // Format date for display
   const formatUpdateTime = () => {
@@ -314,24 +314,38 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
                 {user.userType === 'admin' ? '👨‍💼' : '👤'} {user.username}
               </div>
               {user.userType === 'admin' && (
-                <button
-                  onClick={() => setShowAdminPanel(!showAdminPanel)}
-                  style={{
-                    padding: '8px 12px',
-                    backgroundColor: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  ⚙️ Admin
-                </button>
+                <>
+                  <button
+                    onClick={() => setActiveView('dashboard')}
+                    style={{
+                      padding: '8px 12px',
+                      backgroundColor: activeView === 'dashboard' ? '#3b82f6' : '#e5e7eb',
+                      color: activeView === 'dashboard' ? 'white' : '#333',
+                      border: 'none',
+                      borderRadius: '4px 0 0 4px',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    📊 Dashboard
+                  </button>
+                  <button
+                    onClick={() => setActiveView('admin')}
+                    style={{
+                      padding: '8px 12px',
+                      backgroundColor: activeView === 'admin' ? '#3b82f6' : '#e5e7eb',
+                      color: activeView === 'admin' ? 'white' : '#333',
+                      border: 'none',
+                      borderRadius: '0 4px 4px 0',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    ⚙️ Admin
+                  </button>
+                </>
               )}
               <button
                 onClick={logout}
@@ -366,26 +380,30 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
       </header>
 
       <main className="main-content">
-        {loading && <div className="loading-indicator">📡 Loading boiler data...</div>}
+        {activeView === 'dashboard' ? (
+          <>
+            {loading && <div className="loading-indicator">📡 Loading boiler data...</div>}
 
-        <StatusOverview boilers={boilers} />
+            <StatusOverview boilers={boilers} />
 
-        <CumulativeDailyData cumulativeData={cumulativeData} />
+            <CumulativeDailyData cumulativeData={cumulativeData} />
 
-        <section className="boilers-grid">
-          {boilers.map((boiler) => (
-            <BoilerCard 
-              key={boiler.id} 
-              boiler={boiler} 
-              onClick={() => setSelectedBoiler(boiler)}
-            />
-          ))}
-        </section>
+            <section className="boilers-grid">
+              {boilers.map((boiler) => (
+                <BoilerCard 
+                  key={boiler.id} 
+                  boiler={boiler} 
+                  onClick={() => setSelectedBoiler(boiler)}
+                />
+              ))}
+            </section>
+          </>
+        ) : (
+          <div style={{ padding: '20px' }}>
+            <AdminPanel onClose={() => setActiveView('dashboard')} />
+          </div>
+        )}
       </main>
-
-      {showAdminPanel && user.userType === 'admin' && (
-        <AdminPanel onClose={() => setShowAdminPanel(false)} />
-      )}
 
       <footer className="app-footer">
         <p>📊 Latest Data Available: <strong>{latestDataTime}</strong></p>
