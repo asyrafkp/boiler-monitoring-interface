@@ -1,0 +1,207 @@
+{
+  "boilerId": 2,
+  "boilerName": "Boiler No. 2",
+  "lastUpdate": "2026-01-21T04:54:09.924Z",
+  "dailyData": [
+    {
+      "date": "1/1/2026",
+      "steam": 268,
+      "water": 363,
+      "waterPerTonneSteam": 1.3544776119402986,
+      "naturalGas": 16602,
+      "ngPerTonneSteam": 61.94776119402985,
+      "electric": 0.004104477611940675,
+      "wasteGas": 635
+    },
+    {
+      "date": "1/2/2026",
+      "steam": 252,
+      "water": 404,
+      "waterPerTonneSteam": 1.6031746031746033,
+      "naturalGas": 15472,
+      "ngPerTonneSteam": 61.3968253968254,
+      "electric": 0.004365079365078885,
+      "wasteGas": 542
+    },
+    {
+      "date": "1/3/2026",
+      "steam": 249,
+      "water": 414,
+      "waterPerTonneSteam": 1.6626506024096386,
+      "naturalGas": 15212,
+      "ngPerTonneSteam": 61.092369477911646,
+      "electric": 0.004819277108434096,
+      "wasteGas": 531
+    },
+    {
+      "date": "1/4/2026",
+      "steam": 260,
+      "water": 382,
+      "waterPerTonneSteam": 1.4692307692307693,
+      "naturalGas": 15853,
+      "ngPerTonneSteam": 60.973076923076924,
+      "electric": 0.004230769230769619,
+      "wasteGas": 543
+    },
+    {
+      "date": "1/5/2026",
+      "steam": 244,
+      "water": 400,
+      "waterPerTonneSteam": 1.639344262295082,
+      "naturalGas": 14798,
+      "ngPerTonneSteam": 60.64754098360656,
+      "electric": 0.004508196721310979,
+      "wasteGas": 596
+    },
+    {
+      "date": "1/6/2026",
+      "steam": 205,
+      "water": 436,
+      "waterPerTonneSteam": 2.126829268292683,
+      "naturalGas": 12278,
+      "ngPerTonneSteam": 59.892682926829266,
+      "electric": 0.004878048780487268,
+      "wasteGas": 528
+    },
+    {
+      "date": "1/7/2026",
+      "steam": 203,
+      "water": 440,
+      "waterPerTonneSteam": 2.167487684729064,
+      "naturalGas": 12219,
+      "ngPerTonneSteam": 60.19211822660098,
+      "electric": 0.004926108374385881,
+      "wasteGas": 451
+    },
+    {
+      "date": "1/8/2026",
+      "steam": 195,
+      "water": 538,
+      "waterPerTonneSteam": 2.758974358974359,
+      "naturalGas": 11811,
+      "ngPerTonneSteam": 60.56923076923077,
+      "electric": 0.0051282051282045635,
+      "wasteGas": 432
+    },
+    {
+      "date": "1/9/2026",
+      "steam": 206,
+      "water": 497,
+      "waterPerTonneSteam": 2.412621359223301,
+      "naturalGas": 12189,
+      "ngPerTonneSteam": 59.16990291262136,
+      "electric": 0.0048543689320383,
+      "wasteGas": 328
+    },
+    {
+      "date": "1/10/2026",
+      "steam": 191,
+      "water": 542,
+      "waterPerTonneSteam": 2.837696335078534,
+      "naturalGas": 12133,
+      "ngPerTonneSteam": 63.52356020942408,
+      "electric": 0.0057591623036654495,
+      "wasteGas": 335
+    },
+    {
+      "date": "1/11/2026",
+      "steam": 192,
+      "water": 541,
+      "waterPerTonneSteam": 2.8177083333333335,
+      "naturalGas": 11664,
+      "ngPerTonneSteam": 60.75,
+      "electric": 0.004687499999999484,
+      "wasteGas": 338
+    },
+    {
+      "date": "1/12/2026",
+      "steam": 224,
+      "water": 527,
+      "waterPerTonneSteam": 2.3526785714285716,
+      "naturalGas": 13681,
+      "ngPerTonneSteam": 61.075892857142854,
+      "electric": 0.004910714285714736,
+      "wasteGas": 378
+    },
+    {
+      "date": "1/13/2026",
+      "steam": 250,
+      "water": 444,
+      "waterPerTonneSteam": 1.776,
+      "naturalGas": 15428,
+      "ngPerTonneSteam": 61.712,
+      "electric": 0.004799999999999471,
+      "wasteGas": 497
+    },
+    {
+      "date": "1/14/2026",
+      "steam": 259,
+      "water": 277,
+      "waterPerTonneSteam": 1.0694980694980696,
+      "naturalGas": 16044,
+      "ngPerTonneSteam": 61.945945945945944,
+      "electric": 0.004633204633204981,
+      "wasteGas": 510
+    },
+    {
+      "date": "1/15/2026",
+      "steam": 274,
+      "water": 283,
+      "waterPerTonneSteam": 1.032846715328467,
+      "naturalGas": 16984,
+      "ngPerTonneSteam": 61.98540145985402,
+      "electric": 0.004379562043795138,
+      "wasteGas": 462
+    },
+    {
+      "date": "1/16/2026",
+      "steam": 260,
+      "water": 284,
+      "waterPerTonneSteam": 1.0923076923076922,
+      "naturalGas": 16188,
+      "ngPerTonneSteam": 62.261538461538464,
+      "electric": 0.0046153846153858145,
+      "wasteGas": 538
+    },
+    {
+      "date": "1/17/2026",
+      "steam": 216,
+      "water": 194,
+      "waterPerTonneSteam": 0.8981481481481481,
+      "naturalGas": 13674,
+      "ngPerTonneSteam": 63.30555555555556,
+      "electric": 0.005092592592592032,
+      "wasteGas": 357
+    },
+    {
+      "date": "1/18/2026",
+      "steam": 180,
+      "water": 221,
+      "waterPerTonneSteam": 1.2277777777777779,
+      "naturalGas": 11169,
+      "ngPerTonneSteam": 62.05,
+      "electric": 0.004999999999999449,
+      "wasteGas": 280
+    },
+    {
+      "date": "1/19/2026",
+      "steam": 34,
+      "water": 39,
+      "waterPerTonneSteam": 1.1470588235294117,
+      "naturalGas": 2178,
+      "ngPerTonneSteam": 64.05882352941177,
+      "electric": -13.229411764705882,
+      "wasteGas": 69
+    },
+    {
+      "date": "TOTAL",
+      "steam": 4162,
+      "water": 7226,
+      "waterPerTonneSteam": 1.7361845266698703,
+      "naturalGas": 255577,
+      "ngPerTonneSteam": 61.40725612686209,
+      "electric": 0.004685247477174453,
+      "wasteGas": 8350
+    }
+  ]
+}

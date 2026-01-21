@@ -14,9 +14,10 @@ interface BoilerData {
 
 interface BoilerCardProps {
   boiler: BoilerData
+  onClick?: () => void
 }
 
-const BoilerCard: React.FC<BoilerCardProps> = ({ boiler }) => {
+const BoilerCard: React.FC<BoilerCardProps> = ({ boiler, onClick }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'offline':
@@ -46,7 +47,7 @@ const BoilerCard: React.FC<BoilerCardProps> = ({ boiler }) => {
   }
 
   return (
-    <div className="boiler-card">
+    <div className="boiler-card" onClick={onClick} style={{ cursor: 'pointer' }}>
       <div className="card-header" style={{ borderLeftColor: getStatusColor(boiler.status) }}>
         <h2>{boiler.name}</h2>
         <span 

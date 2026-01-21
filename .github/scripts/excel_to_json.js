@@ -177,3 +177,16 @@ fs.writeFileSync(outputPath, JSON.stringify(jsonData, null, 2));
 
 console.log('✅ JSON created successfully:', outputPath);
 console.log('📊 Data:', JSON.stringify(jsonData, null, 2));
+
+// Also parse daily reports for each boiler
+console.log('\n📊 Parsing boiler daily reports...');
+try {
+  const { execSync } = await import('child_process');
+  execSync('node .github/scripts/parse_boiler_reports.js', { 
+    stdio: 'inherit',
+    cwd: path.join(__dirname, '../..')
+  });
+} catch (error) {
+  console.error('⚠️ Error parsing boiler reports:', error.message);
+}
+

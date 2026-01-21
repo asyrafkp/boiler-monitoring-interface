@@ -4,6 +4,7 @@ import { useAuth } from './contexts/AuthContext'
 import LoginPage from './pages/LoginPage'
 import BoilerCard from './components/BoilerCard'
 import StatusOverview from './components/StatusOverview'
+import BoilerDetailModal from './components/BoilerDetailModal'
 
 interface BoilerData {
   id: number
@@ -75,6 +76,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
   const [latestDataTime, setLatestDataTime] = useState<string>('No data yet')
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedBoiler, setSelectedBoiler] = useState<BoilerData | null>(null)
 
   // Format date for display
   const formatUpdateTime = () => {
@@ -261,7 +263,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
 
         <section className="boilers-grid">
           {boilers.map((boiler) => (
-            <BoilerCard key={boiler.id} boiler={boiler} />
+            <BoilerCard 
+              key={boiler.id} 
+              boiler={boiler} 
+              onClick={() => setSelectedBoiler(boiler)}
+            />
           ))}
         </section>
       </main>
@@ -271,6 +277,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
         <p className="footer-secondary">Data auto-synced from OneDrive hourly via GitHub Actions</p>
         <p className="footer-tech">Powered by React + GitHub Pages</p>
       </footer>
+
+      {selectedBoiler && (
+        <BoilerDetailModal
+          boilerId={selectedBoiler.id}
+          boilerName={selectedBoiler.name}
+          onClose={() => setSelectedBoiler(null)}
+        />
+      )}
     </div>
   )
 }
