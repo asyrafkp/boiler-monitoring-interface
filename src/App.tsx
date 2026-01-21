@@ -210,8 +210,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
     try {
       console.log('📊 Fetching boiler data from JSON...')
       
-      // Fetch from GitHub Pages hosted JSON file
-      const response = await fetch('/boiler-monitoring-interface/boiler_data.json')
+      // Fetch from GitHub Pages hosted JSON file with cache-busting query parameter
+      // This ensures we always get the latest data from the server
+      const cacheParam = new Date().getTime()
+      const response = await fetch(`/boiler-monitoring-interface/boiler_data.json?t=${cacheParam}`)
       
       if (!response.ok) {
         throw new Error('Failed to fetch data file')
