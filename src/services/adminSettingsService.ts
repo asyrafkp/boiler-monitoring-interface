@@ -146,8 +146,12 @@ export async function syncFromOneDriveLink(
       ? `${directLink}&download=1` 
       : `${directLink}?download=1`;
 
+    console.log('🔗 Download URL:', downloadUrl);
+
     // Fetch the Excel file
     const response = await fetch(downloadUrl);
+
+    console.log(`📡 OneDrive Response: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
       throw new Error(
@@ -157,7 +161,10 @@ export async function syncFromOneDriveLink(
     }
 
     const arrayBuffer = await response.arrayBuffer();
+    console.log(`📊 Downloaded ${arrayBuffer.byteLength} bytes`);
+    
     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    console.log(`📑 Found sheets: ${workbook.SheetNames.join(', ')}`);
 
     // Find sheets
     const steamSheetName = workbook.SheetNames.find(
@@ -172,6 +179,8 @@ export async function syncFromOneDriveLink(
         name.toLowerCase().includes('ratio')
     );
 
+    console.log(`🔍 Found steam sheet: ${steamSheetName}, water sheet: ${waterSheetName}`);
+
     if (!steamSheetName || !waterSheetName) {
       throw new Error(
         'Could not find NGSTEAM RATIO or WATER_STEAM RATIO sheets in Excel file'
@@ -185,6 +194,19 @@ export async function syncFromOneDriveLink(
     const steamParsed = parseNGSteamSheet(steamSheet);
     const waterParsed = parseWaterSteamSheet(waterSheet);
 
+    console.log('📊 Parsed steam data:', {
+      b1_steam: steamParsed.b1.steam,
+      b2_steam: steamParsed.b2.steam,
+      b3_steam: steamParsed.b3.steam,
+      b1_ng: steamParsed.b1.ng,
+    });
+
+    console.log('💧 Parsed water data:', {
+      b1_water: waterParsed.b1Water,
+      b2_water: waterParsed.b2Water,
+      b3_water: waterParsed.b3Water,
+    });
+
     // Store in Supabase
     await storeBoilerReading({
       b1_steam: steamParsed.b1.steam,
@@ -197,7 +219,7 @@ export async function syncFromOneDriveLink(
       timestamp: new Date().toISOString(),
     });
 
-    console.log('✅ Data synced successfully from OneDrive');
+    console.log('✅ Data synced successfully from OneDrive and stored in Supabase');
 
     return {
       success: true,
