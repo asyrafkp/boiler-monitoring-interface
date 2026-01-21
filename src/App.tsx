@@ -217,7 +217,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
                 padding: '8px 12px',
                 backgroundColor: '#f0f9ff',
                 borderRadius: '4px',
-                fontSize: '13px'
+                fontSize: '13px',
+                color: '#000000'
               }}>
                 {user.userType === 'admin' ? '👨‍💼' : '👤'} {user.username}
               </div>

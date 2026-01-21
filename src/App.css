@@ -94,7 +94,7 @@
 .app-footer p:first-child {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: rgba(255, 255, 255, 0.9);
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
@@ -102,7 +102,7 @@
 }
 
 .app-footer p:first-child strong {
-  color: #10b981;
+  color: #34d399;
   font-size: 1rem;
 }
 
