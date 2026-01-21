@@ -332,6 +332,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
       )}
       
       <div style={{position: 'fixed', top: '10px', right: '10px', backgroundColor: '#333', color: '#0f0', padding: '10px', zIndex: 9999, fontFamily: 'monospace', fontSize: '12px', maxWidth: '300px'}}>
+        <div>⚠️ DEBUG MODE ACTIVE</div>
         <div>user object: {JSON.stringify(user)}</div>
         <div>userType: {user?.userType}</div>
         <div>condition met: {user?.userType === 'admin' ? 'YES' : 'NO'}</div>
