@@ -81,7 +81,7 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
                       <th>Water/Tonne</th>
                       <th>Natural Gas (sm³)</th>
                       <th>NG/Tonne</th>
-                      <th>Electric (MWh)</th>
+                      <th>Electric ({boilerId === 3 ? 'kWh' : 'MWh'})</th>
                       <th>Waste Gas (Nm³)</th>
                     </tr>
                   </thead>
@@ -95,7 +95,7 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
                           <td>{row.waterPerTonneSteam?.toFixed(2) || 0}</td>
                           <td>{row.naturalGas?.toFixed(0) || 0}</td>
                           <td>{row.ngPerTonneSteam?.toFixed(2) || 0}</td>
-                          <td>{row.electric?.toFixed(4) || 0}</td>
+                          <td>{boilerId === 3 ? (row.electric?.toFixed(2) || 0) : (row.electric?.toFixed(4) || 0)}</td>
                           <td>{row.wasteGas?.toFixed(0) || 0}</td>
                         </tr>
                       ))
