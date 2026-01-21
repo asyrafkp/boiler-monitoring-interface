@@ -12,6 +12,32 @@ interface DailyData {
   wasteGas: number
 }
 
+interface HourlyData {
+  time: string
+  steam: number
+  water: number
+  electricT1: number
+  electricT2: number
+  electricTotal: number
+  ngBurner1: number
+  ngBurner2: number
+  ngTotal: number
+  wgBurner1: number
+  wgBurner2: number
+  wgTotal: number
+  feedPumpTemp: number
+  feedPumpPressure: number
+  economiserTempIn: number
+  economiserTempOut: number
+  flueGasTempIn: number
+  flueGasTempOut: number
+  blowdownTime: number
+}
+
+interface HourlyDataByDate {
+  [date: string]: HourlyData[]
+}
+
 interface BoilerDetailModalProps {
   boilerId: number
   boilerName: string
@@ -21,25 +47,52 @@ interface BoilerDetailModalProps {
 const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerName, onClose }) => {
   const [activeTab, setActiveTab] = useState<'daily' | 'hourly'>('daily')
   const [dailyData, setDailyData] = useState<DailyData[]>([])
+  const [hourlyData, setHourlyData] = useState<HourlyDataByDate>({})
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchBoilerData()
-  }, [boilerId])
+  }, [boilerId, activeTab])
 
   const fetchBoilerData = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/boiler-monitoring-interface/boiler_${boilerId}_daily.json`)
-      if (response.ok) {
-        const data = await response.json()
-        setDailyData(data.dailyData || [])
+      
+      if (activeTab === 'daily') {
+        const response = await fetch(`/boiler-monitoring-interface/boiler_${boilerId}_daily.json`)
+        if (response.ok) {
+          const data = await response.json()
+          setDailyData(data.dailyData || [])
+        }
+      } else {
+        const response = await fetch(`/boiler-monitoring-interface/boiler_${boilerId}_hourly.json`)
+        if (response.ok) {
+          const data = await response.json()
+          setHourlyData(data.hourlyData || {})
+          // Auto-expand latest date
+          const dates = Object.keys(data.hourlyData || {})
+          if (dates.length > 0) {
+            const latestDate = dates[dates.length - 1]
+            setExpandedDates(new Set([latestDate]))
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching boiler data:', error)
     } finally {
       setLoading(false)
     }
+  }
+
+  const toggleDate = (date: string) => {
+    const newExpanded = new Set(expandedDates)
+    if (newExpanded.has(date)) {
+      newExpanded.delete(date)
+    } else {
+      newExpanded.add(date)
+    }
+    setExpandedDates(newExpanded)
   }
 
   return (
@@ -210,9 +263,81 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
             </div>
           ) : (
             <div className="hourly-data-section">
-              <p style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
-                Hourly data will be available soon
-              </p>
+              <h3>Hourly Production Data</h3>
+              {Object.keys(hourlyData).length === 0 ? (
+                <p style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                  No hourly data available for Boiler No. {boilerId}
+                </p>
+              ) : (
+                <div className="date-sections">
+                  {Object.keys(hourlyData).sort((a, b) => {
+                    // Sort dates in descending order (latest first)
+                    const dateA = new Date(a)
+                    const dateB = new Date(b)
+                    return dateB.getTime() - dateA.getTime()
+                  }).map((date, index) => (
+                    <div key={date} className="date-section">
+                      <button 
+                        className={`date-header ${expandedDates.has(date) ? 'expanded' : ''}`}
+                        onClick={() => toggleDate(date)}
+                      >
+                        <span className="date-title">{date} {index === 0 && '(Latest)'}</span>
+                        <span className="date-count">({hourlyData[date].length} records)</span>
+                        <span className="expand-icon">{expandedDates.has(date) ? '▼' : '►'}</span>
+                      </button>
+                      
+                      {expandedDates.has(date) && (
+                        <div className="hourly-table-container">
+                          <table className="hourly-table">
+                            <thead>
+                              <tr>
+                                <th>Time</th>
+                                <th>Steam (MT)</th>
+                                <th>Water (MT)</th>
+                                <th>Electric T1 (MWh)</th>
+                                <th>Electric T2 (MWh)</th>
+                                <th>NG Burner 1 (sm³)</th>
+                                <th>NG Burner 2 (sm³)</th>
+                                <th>WG Burner 1 (Nm³)</th>
+                                <th>WG Burner 2 (Nm³)</th>
+                                <th>Feed Pump Temp (°C)</th>
+                                <th>Feed Pump Pressure (Barg)</th>
+                                <th>Economiser In (°C)</th>
+                                <th>Economiser Out (°C)</th>
+                                <th>Flue Gas In (°C)</th>
+                                <th>Flue Gas Out (°C)</th>
+                                <th>Blowdown Time</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {hourlyData[date].map((row, idx) => (
+                                <tr key={idx}>
+                                  <td>{row.time}</td>
+                                  <td>{row.steam?.toFixed(0) || 0}</td>
+                                  <td>{row.water?.toFixed(0) || 0}</td>
+                                  <td>{row.electricT1?.toFixed(4) || 0}</td>
+                                  <td>{row.electricT2?.toFixed(4) || 0}</td>
+                                  <td>{row.ngBurner1?.toFixed(0) || 0}</td>
+                                  <td>{row.ngBurner2?.toFixed(0) || 0}</td>
+                                  <td>{row.wgBurner1?.toFixed(0) || 0}</td>
+                                  <td>{row.wgBurner2?.toFixed(0) || 0}</td>
+                                  <td>{row.feedPumpTemp > 0 ? row.feedPumpTemp.toFixed(1) : '-'}</td>
+                                  <td>{row.feedPumpPressure > 0 ? row.feedPumpPressure.toFixed(0) : '-'}</td>
+                                  <td>{row.economiserTempIn > 0 ? row.economiserTempIn.toFixed(1) : '-'}</td>
+                                  <td>{row.economiserTempOut > 0 ? row.economiserTempOut.toFixed(1) : '-'}</td>
+                                  <td>{row.flueGasTempIn > 0 ? row.flueGasTempIn.toFixed(1) : '-'}</td>
+                                  <td>{row.flueGasTempOut > 0 ? row.flueGasTempOut.toFixed(1) : '-'}</td>
+                                  <td>{row.blowdownTime > 0 ? row.blowdownTime.toFixed(0) : '-'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

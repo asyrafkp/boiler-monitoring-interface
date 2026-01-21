@@ -190,3 +190,15 @@ try {
   console.error('⚠️ Error parsing boiler reports:', error.message);
 }
 
+// Also parse hourly data for each boiler
+console.log('\n⏱️  Parsing boiler hourly data...');
+try {
+  const { execSync } = await import('child_process');
+  execSync('node .github/scripts/parse_hourly_data.js', { 
+    stdio: 'inherit',
+    cwd: path.join(__dirname, '../..')
+  });
+} catch (error) {
+  console.error('⚠️ Error parsing hourly data:', error.message);
+}
+

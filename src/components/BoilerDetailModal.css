@@ -309,3 +309,133 @@
     padding: 1rem;
   }
 }
+
+/* Hourly Data Styles */
+.hourly-data-section h3 {
+  font-size: 1.3rem;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.date-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.date-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.date-header {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e5e7eb 100%);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.date-header:hover {
+  background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+}
+
+.date-header.expanded {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.date-title {
+  font-weight: 700;
+}
+
+.date-count {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.expand-icon {
+  font-size: 0.8rem;
+  margin-left: auto;
+  padding-left: 1rem;
+}
+
+.hourly-table-container {
+  overflow-x: auto;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.hourly-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 0.85rem;
+}
+
+.hourly-table thead {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.hourly-table th {
+  padding: 0.75rem 0.5rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.hourly-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background 0.2s;
+}
+
+.hourly-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.hourly-table td {
+  padding: 0.6rem 0.5rem;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.hourly-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+@media (max-width: 768px) {
+  .date-header {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .date-count {
+    font-size: 0.8rem;
+  }
+
+  .hourly-table {
+    font-size: 0.75rem;
+  }
+
+  .hourly-table th,
+  .hourly-table td {
+    padding: 0.5rem 0.4rem;
+    font-size: 0.7rem;
+  }
+}
