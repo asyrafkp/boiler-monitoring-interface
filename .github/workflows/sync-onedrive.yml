@@ -41,8 +41,23 @@ jobs:
             echo "✅ File downloaded successfully"
             ls -lh data/boiler_data.xlsx
           else
-            echo "⚠️ File not found, will create placeholder"
+            echo "⚠️ File not found"
+            exit 1
           fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Parse Excel and sync to Supabase
+        run: node .github/scripts/sync_to_supabase.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
       - name: Configure Git
         run: |
@@ -53,7 +68,7 @@ jobs:
       - name: Commit and push
         if: always()
         run: |
-          git add data/boiler_data.xlsx data/.sync_ready 2>/dev/null || true
+          git add data/boiler_data.xlsx 2>/dev/null || true
           
           # Check if there are actual changes
           if git diff --cached --quiet; then
@@ -63,8 +78,14 @@ jobs:
             git push origin main 2>&1 || echo "Push skipped (no changes or already up to date)"
           fi
 
+      - name: Notify on success
+        if: success()
+        run: |
+          echo "✅ Sync completed successfully"
+          echo "📊 Excel file updated and data stored in Supabase"
+
       - name: Notify on failure
         if: failure()
         run: |
           echo "❌ Sync failed - check logs above"
-          exit 1
+          exit 0  # Don't fail workflow to allow manual recovery
