@@ -76,8 +76,8 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
                   <thead>
                     <tr>
                       <th>Date</th>
-                      <th>Steam (mt)</th>
-                      <th>Water (ml)</th>
+                      <th>Steam (MT)</th>
+                      <th>Water (MT)</th>
                       <th>Water/Tonne</th>
                       <th>Natural Gas (sm³)</th>
                       <th>NG/Tonne</th>
@@ -111,7 +111,7 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
               {dailyData.length > 0 && (
                 <div className="charts-section">
                   <div className="chart-card">
-                    <h4>Steam Production Trend</h4>
+                    <h4>Steam Production Trend (MT)</h4>
                     <div className="simple-chart">
                       {dailyData.map((row, index) => (
                         <div key={index} className="chart-bar-wrapper">
@@ -121,7 +121,7 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
                               height: `${(row.steam / Math.max(...dailyData.map(d => d.steam))) * 100}%`,
                               minHeight: '2px'
                             }}
-                            title={`${row.date}: ${row.steam} mt`}
+                            title={`${row.date}: ${row.steam} MT`}
                           />
                           <span className="chart-label">{row.date.split('/')[0]}</span>
                         </div>
@@ -130,7 +130,26 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
                   </div>
 
                   <div className="chart-card">
-                    <h4>Natural Gas Usage Trend</h4>
+                    <h4>Water Usage Trend (MT)</h4>
+                    <div className="simple-chart">
+                      {dailyData.map((row, index) => (
+                        <div key={index} className="chart-bar-wrapper">
+                          <div 
+                            className="chart-bar water-bar"
+                            style={{ 
+                              height: `${(row.water / Math.max(...dailyData.map(d => d.water))) * 100}%`,
+                              minHeight: '2px'
+                            }}
+                            title={`${row.date}: ${row.water} MT`}
+                          />
+                          <span className="chart-label">{row.date.split('/')[0]}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="chart-card">
+                    <h4>Natural Gas Usage Trend (sm³)</h4>
                     <div className="simple-chart">
                       {dailyData.map((row, index) => (
                         <div key={index} className="chart-bar-wrapper">
@@ -141,6 +160,25 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
                               minHeight: '2px'
                             }}
                             title={`${row.date}: ${row.naturalGas} sm³`}
+                          />
+                          <span className="chart-label">{row.date.split('/')[0]}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="chart-card">
+                    <h4>NG/Tonne Steam Trend</h4>
+                    <div className="simple-chart">
+                      {dailyData.map((row, index) => (
+                        <div key={index} className="chart-bar-wrapper">
+                          <div 
+                            className="chart-bar ngtonne-bar"
+                            style={{ 
+                              height: `${(row.ngPerTonneSteam / Math.max(...dailyData.map(d => d.ngPerTonneSteam))) * 100}%`,
+                              minHeight: '2px'
+                            }}
+                            title={`${row.date}: ${row.ngPerTonneSteam.toFixed(2)}`}
                           />
                           <span className="chart-label">{row.date.split('/')[0]}</span>
                         </div>
