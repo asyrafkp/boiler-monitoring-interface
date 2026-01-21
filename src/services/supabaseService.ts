@@ -3,11 +3,18 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Check .env.local');
+// Supabase is optional - only needed for admin uploads
+// GitHub-hosted JSON is used for viewing data
+let supabase: any = null;
+
+if (supabaseUrl && supabaseAnonKey) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  console.log('✅ Supabase connected (optional - for admin uploads)');
+} else {
+  console.log('ℹ️ Supabase not configured - admin uploads disabled');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export { supabase };
 
 // Store boiler data readings
 export async function storeBoilerReading(data: {

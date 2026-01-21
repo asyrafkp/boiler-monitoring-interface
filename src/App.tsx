@@ -4,8 +4,6 @@ import { useAuth } from './contexts/AuthContext'
 import LoginPage from './pages/LoginPage'
 import BoilerCard from './components/BoilerCard'
 import StatusOverview from './components/StatusOverview'
-import { AdminPanel } from './components/AdminPanel'
-import { AdminSettings } from './components/AdminSettings'
 
 interface BoilerData {
   id: number
@@ -193,12 +191,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
     return () => clearInterval(refreshInterval)
   }, [])
 
-  // Handler for when admin updates OneDrive link and syncs data
-  const handleSyncComplete = () => {
-    console.log('✅ Sync complete! Refreshing dashboard...')
-    fetchBoilerData()
-  }
-
   return (
     <div className="app-container">
       <header className="app-header">
@@ -278,13 +270,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
         <p className="footer-secondary">Data auto-synced from OneDrive hourly via GitHub Actions</p>
         <p className="footer-tech">Powered by React + GitHub Pages</p>
       </footer>
-
-      {user?.userType === 'admin' && (
-        <>
-          <AdminPanel />
-          <AdminSettings onSyncComplete={handleSyncComplete} />
-        </>
-      )}
     </div>
   )
 }
