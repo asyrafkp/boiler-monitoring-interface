@@ -189,17 +189,27 @@
   color: #1f2937;
   margin-bottom: 1rem;
   font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-max {
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 .simple-chart {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  height: 200px;
-  gap: 4px;
+  height: 250px;
+  gap: 3px;
   padding: 1rem 0.5rem;
   border-bottom: 2px solid #e5e7eb;
   border-left: 2px solid #e5e7eb;
+  position: relative;
 }
 
 .chart-bar-wrapper {
@@ -239,10 +249,19 @@
   background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);
 }
 
+.chart-value {
+  font-size: 0.65rem;
+  color: #374151;
+  font-weight: 600;
+  margin-bottom: 2px;
+  white-space: nowrap;
+}
+
 .chart-label {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: #6b7280;
   font-weight: 600;
+  margin-top: 4px;
 }
 
 /* Responsive Design */

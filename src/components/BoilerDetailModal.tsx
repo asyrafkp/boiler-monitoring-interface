@@ -111,78 +111,98 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
               {dailyData.length > 0 && (
                 <div className="charts-section">
                   <div className="chart-card">
-                    <h4>Steam Production Trend (MT)</h4>
+                    <h4>Steam Production Trend (MT) <span className="chart-max">Max: {Math.max(...dailyData.map(d => d.steam)).toFixed(0)} MT</span></h4>
                     <div className="simple-chart">
-                      {dailyData.map((row, index) => (
-                        <div key={index} className="chart-bar-wrapper">
-                          <div 
-                            className="chart-bar steam-bar"
-                            style={{ 
-                              height: `${(row.steam / Math.max(...dailyData.map(d => d.steam))) * 100}%`,
-                              minHeight: '2px'
-                            }}
-                            title={`${row.date}: ${row.steam} MT`}
-                          />
-                          <span className="chart-label">{row.date.split('/')[0]}</span>
-                        </div>
-                      ))}
+                      {dailyData.map((row, index) => {
+                        const maxValue = Math.max(...dailyData.map(d => d.steam));
+                        const percentage = (row.steam / maxValue) * 100;
+                        return (
+                          <div key={index} className="chart-bar-wrapper">
+                            <span className="chart-value">{row.steam?.toFixed(0)}</span>
+                            <div 
+                              className="chart-bar steam-bar"
+                              style={{ 
+                                height: `${percentage}%`,
+                                minHeight: '5px'
+                              }}
+                              title={`${row.date}: ${row.steam} MT`}
+                            />
+                            <span className="chart-label">{row.date.split('/')[1]}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
                   <div className="chart-card">
-                    <h4>Water Usage Trend (MT)</h4>
+                    <h4>Water Usage Trend (MT) <span className="chart-max">Max: {Math.max(...dailyData.map(d => d.water)).toFixed(0)} MT</span></h4>
                     <div className="simple-chart">
-                      {dailyData.map((row, index) => (
-                        <div key={index} className="chart-bar-wrapper">
-                          <div 
-                            className="chart-bar water-bar"
-                            style={{ 
-                              height: `${(row.water / Math.max(...dailyData.map(d => d.water))) * 100}%`,
-                              minHeight: '2px'
-                            }}
-                            title={`${row.date}: ${row.water} MT`}
-                          />
-                          <span className="chart-label">{row.date.split('/')[0]}</span>
-                        </div>
-                      ))}
+                      {dailyData.map((row, index) => {
+                        const maxValue = Math.max(...dailyData.map(d => d.water));
+                        const percentage = (row.water / maxValue) * 100;
+                        return (
+                          <div key={index} className="chart-bar-wrapper">
+                            <span className="chart-value">{row.water?.toFixed(0)}</span>
+                            <div 
+                              className="chart-bar water-bar"
+                              style={{ 
+                                height: `${percentage}%`,
+                                minHeight: '5px'
+                              }}
+                              title={`${row.date}: ${row.water} MT`}
+                            />
+                            <span className="chart-label">{row.date.split('/')[1]}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
                   <div className="chart-card">
-                    <h4>Natural Gas Usage Trend (sm³)</h4>
+                    <h4>Natural Gas Usage Trend (sm³) <span className="chart-max">Max: {Math.max(...dailyData.map(d => d.naturalGas)).toLocaleString()} sm³</span></h4>
                     <div className="simple-chart">
-                      {dailyData.map((row, index) => (
-                        <div key={index} className="chart-bar-wrapper">
-                          <div 
-                            className="chart-bar ng-bar"
-                            style={{ 
-                              height: `${(row.naturalGas / Math.max(...dailyData.map(d => d.naturalGas))) * 100}%`,
-                              minHeight: '2px'
-                            }}
-                            title={`${row.date}: ${row.naturalGas} sm³`}
-                          />
-                          <span className="chart-label">{row.date.split('/')[0]}</span>
-                        </div>
-                      ))}
+                      {dailyData.map((row, index) => {
+                        const maxValue = Math.max(...dailyData.map(d => d.naturalGas));
+                        const percentage = (row.naturalGas / maxValue) * 100;
+                        return (
+                          <div key={index} className="chart-bar-wrapper">
+                            <span className="chart-value">{(row.naturalGas / 1000).toFixed(1)}k</span>
+                            <div 
+                              className="chart-bar ng-bar"
+                              style={{ 
+                                height: `${percentage}%`,
+                                minHeight: '5px'
+                              }}
+                              title={`${row.date}: ${row.naturalGas.toLocaleString()} sm³`}
+                            />
+                            <span className="chart-label">{row.date.split('/')[1]}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
                   <div className="chart-card">
-                    <h4>NG/Tonne Steam Trend</h4>
+                    <h4>NG/Tonne Steam Trend <span className="chart-max">Max: {Math.max(...dailyData.map(d => d.ngPerTonneSteam)).toFixed(2)}</span></h4>
                     <div className="simple-chart">
-                      {dailyData.map((row, index) => (
-                        <div key={index} className="chart-bar-wrapper">
-                          <div 
-                            className="chart-bar ngtonne-bar"
-                            style={{ 
-                              height: `${(row.ngPerTonneSteam / Math.max(...dailyData.map(d => d.ngPerTonneSteam))) * 100}%`,
-                              minHeight: '2px'
-                            }}
-                            title={`${row.date}: ${row.ngPerTonneSteam.toFixed(2)}`}
-                          />
-                          <span className="chart-label">{row.date.split('/')[0]}</span>
-                        </div>
-                      ))}
+                      {dailyData.map((row, index) => {
+                        const maxValue = Math.max(...dailyData.map(d => d.ngPerTonneSteam));
+                        const percentage = (row.ngPerTonneSteam / maxValue) * 100;
+                        return (
+                          <div key={index} className="chart-bar-wrapper">
+                            <span className="chart-value">{row.ngPerTonneSteam?.toFixed(1)}</span>
+                            <div 
+                              className="chart-bar ngtonne-bar"
+                              style={{ 
+                                height: `${percentage}%`,
+                                minHeight: '5px'
+                              }}
+                              title={`${row.date}: ${row.ngPerTonneSteam.toFixed(2)}`}
+                            />
+                            <span className="chart-label">{row.date.split('/')[1]}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
