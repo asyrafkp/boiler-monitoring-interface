@@ -134,13 +134,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
   const fetchCumulativeData = async () => {
     try {
       const cacheBuster = `?v=${Date.now()}`
-      let totalSteam = 0
-      let totalWater = 0
-      let totalNG = 0
-      let totalElec = 0
-      let totalWG = 0
+      
+      // First pass: Find the latest date across all boilers
       let latestDate = ''
-
+      let latestDateObj: Date | null = null
+      
       for (let i = 1; i <= 3; i++) {
         const response = await fetch(`/boiler-monitoring-interface/boiler_${i}_daily.json${cacheBuster}`)
         if (response.ok) {
@@ -149,12 +147,39 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
             // Get second last entry (last entry is usually TOTAL)
             const latestDayData = data.dailyData[data.dailyData.length - 2]
             if (latestDayData && latestDayData.date !== 'TOTAL') {
-              totalSteam += latestDayData.steam || 0
-              totalWater += latestDayData.water || 0
-              totalNG += latestDayData.naturalGas || 0
-              totalElec += latestDayData.electric || 0
-              totalWG += latestDayData.wasteGas || 0
-              latestDate = latestDayData.date
+              const currentDate = new Date(latestDayData.date)
+              if (!latestDateObj || currentDate > latestDateObj) {
+                latestDateObj = currentDate
+                latestDate = latestDayData.date
+              }
+            }
+          }
+        }
+      }
+
+      // Second pass: Sum data only from the latest date
+      let totalSteam = 0
+      let totalWater = 0
+      let totalNG = 0
+      let totalElec = 0
+      let totalWG = 0
+
+      for (let i = 1; i <= 3; i++) {
+        const response = await fetch(`/boiler-monitoring-interface/boiler_${i}_daily.json${cacheBuster}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.dailyData && data.dailyData.length > 0) {
+            // Find the entry matching the latest date
+            const matchingEntry = data.dailyData.find((entry: any) => 
+              entry.date === latestDate && entry.date !== 'TOTAL'
+            )
+            
+            if (matchingEntry) {
+              totalSteam += matchingEntry.steam || 0
+              totalWater += matchingEntry.water || 0
+              totalNG += matchingEntry.naturalGas || 0
+              totalElec += matchingEntry.electric || 0
+              totalWG += matchingEntry.wasteGas || 0
             }
           }
         }
