@@ -49,13 +49,70 @@ function parseReportB1B2(worksheet, boilerNum) {
       dateStr = dateValue.toString();
     }
 
-    const steam = parseFloat(row[1]) || 0;
-    const water = parseFloat(row[2]) || 0;
-    const waterPerTonneSteam = parseFloat(row[3]) || 0;
-    const naturalGas = parseFloat(row[4]) || 0;
-    const ngPerTonneSteam = parseFloat(row[5]) || 0;
-    const electric = parseFloat(row[9]) || 0;
-    const wasteGas = parseFloat(row[10]) || 0;
+    const steam = Math.max(0, parseFloat(row[1]) || 0);
+    const water = Math.max(0, parseFloat(row[2]) || 0);
+    const waterPerTonneSteam = Math.max(0, parseFloat(row[3]) || 0);
+    const naturalGas = Math.max(0, parseFloat(row[4]) || 0);
+    const ngPerTonneSteam = Math.max(0, parseFloat(row[5]) || 0);
+    const electric = Math.max(0, parseFloat(row[9]) || 0);
+    const wasteGas = Math.max(0, parseFloat(row[10]) || 0);
+
+    // Only include rows with actual data
+    if (steam > 0 || water > 0 || naturalGas > 0) {
+      dailyData.push({
+        date: dateStr,
+        steam,
+        water,
+        waterPerTonneSteam,
+        naturalGas,
+        ngPerTonneSteam,
+        electric,
+        wasteGas
+      });
+    }
+  }
+
+  return dailyData;
+}
+
+/**
+ * Parse REPORT B3 sheet (same layout as B1/B2 based on provided image)
+ * Columns: DATE, STEAM, WATER, WATER/TONNE STEAM, NATURAL GAS, NG/TONNE STEAM, ELECTRIC (T1, T2, TOTAL), ELECTRIC/TONNE STEAM
+ * Note: Any negative values are automatically converted to 0
+ */
+function parseReportB3(worksheet, boilerNum) {
+  const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  const dailyData = [];
+
+  // Data starts from row 9 (index 8) based on the image, skip header rows
+  for (let i = 8; i < data.length; i++) {
+    const row = data[i];
+    if (!row || row.length < 2) continue;
+
+    const dateValue = row[0];
+    if (!dateValue || dateValue === 0) continue;
+
+    // Parse date
+    let dateStr = '';
+    if (typeof dateValue === 'number') {
+      // Excel date serial number
+      const date = new Date((dateValue - 25569) * 86400 * 1000);
+      dateStr = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+    } else {
+      dateStr = dateValue.toString();
+    }
+
+    // Extract values and ensure no negative values (convert to 0)
+    const steam = Math.max(0, parseFloat(row[1]) || 0);
+    const water = Math.max(0, parseFloat(row[2]) || 0);
+    const waterPerTonneSteam = Math.max(0, parseFloat(row[3]) || 0);
+    const naturalGas = Math.max(0, parseFloat(row[4]) || 0);
+    const ngPerTonneSteam = Math.max(0, parseFloat(row[5]) || 0);
+    // Electric columns: T1 (6), T2 (7), TOTAL (8)
+    const electric = Math.max(0, parseFloat(row[8]) || 0);
+    const electricPerTonne = Math.max(0, parseFloat(row[9]) || 0);
+    // Note: B3 sheet doesn't have waste gas column based on image
+    const wasteGas = 0;
 
     // Only include rows with actual data
     if (steam > 0 || water > 0 || naturalGas > 0) {
@@ -77,9 +134,9 @@ function parseReportB1B2(worksheet, boilerNum) {
 
 // Process each boiler
 const boilers = [
-  { num: 1, sheetName: 'REPORT B1' },
-  { num: 2, sheetName: 'REPORT B2' },
-  // B3 will be added later with different parser
+  { num: 1, sheetName: 'REPORT B1', parser: parseReportB1B2 },
+  { num: 2, sheetName: 'REPORT B2', parser: parseReportB1B2 },
+  { num: 3, sheetName: 'REPORT B3', parser: parseReportB3 }
 ];
 
 for (const boiler of boilers) {
@@ -92,7 +149,7 @@ for (const boiler of boilers) {
 
   console.log(`📋 Processing ${boiler.sheetName}...`);
   
-  const dailyData = parseReportB1B2(sheet, boiler.num);
+  const dailyData = boiler.parser(sheet, boiler.num);
   
   const outputData = {
     boilerId: boiler.num,
