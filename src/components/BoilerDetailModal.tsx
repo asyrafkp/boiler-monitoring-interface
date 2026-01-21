@@ -68,10 +68,28 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
       } else {
         const response = await fetch(`/boiler-monitoring-interface/boiler_${boilerId}_hourly.json`)
         if (response.ok) {
-          const data = await response.json()
-          setHourlyData(data.hourlyData || {})
+          let data = await response.json()
+          let hourlyDataToUse = data.hourlyData || {}
+          
+          // Normalize Boiler 3 data to match Boiler 1 & 2 format
+          if (boilerId === 3) {
+            hourlyDataToUse = Object.keys(hourlyDataToUse).reduce((acc, date) => {
+              acc[date] = hourlyDataToUse[date].map((record: any) => ({
+                ...record,
+                ngBurner1: record.ngBurner || 0,
+                ngBurner2: 0,
+                ngTotal: record.ngBurner || 0,
+                wgBurner1: 0,
+                wgBurner2: 0,
+                wgTotal: 0
+              }))
+              return acc
+            }, {} as HourlyDataByDate)
+          }
+          
+          setHourlyData(hourlyDataToUse)
           // Auto-expand latest date
-          const dates = Object.keys(data.hourlyData || {})
+          const dates = Object.keys(hourlyDataToUse)
           if (dates.length > 0) {
             const latestDate = dates[dates.length - 1]
             setExpandedDates(new Set([latestDate]))
