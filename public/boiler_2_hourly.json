@@ -362,7 +362,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 511393,
         "water": 566855,
         "electricT1": 1.6003,
@@ -889,7 +889,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 511642,
         "water": 567248,
         "electricT1": 1.6009,
@@ -1416,7 +1416,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 511894,
         "water": 567671,
         "electricT1": 1.6016,
@@ -1943,7 +1943,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 512148,
         "water": 568047,
         "electricT1": 1.6022,
@@ -2470,7 +2470,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 512406,
         "water": 568439,
         "electricT1": 1.6029,
@@ -2997,7 +2997,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 512615,
         "water": 568876,
         "electricT1": 1.6035,
@@ -3524,7 +3524,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 512825,
         "water": 569301,
         "electricT1": 1.6041,
@@ -4051,7 +4051,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 513016,
         "water": 569830,
         "electricT1": 1.6047,
@@ -4578,7 +4578,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 513216,
         "water": 570322,
         "electricT1": 1.6053,
@@ -5105,7 +5105,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 513408,
         "water": 570863,
         "electricT1": 1.6059,
@@ -5632,7 +5632,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 513609,
         "water": 571411,
         "electricT1": 1.6065,
@@ -6159,7 +6159,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 513820,
         "water": 571940,
         "electricT1": 1.6071,
@@ -6686,7 +6686,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 514057,
         "water": 572432,
         "electricT1": 1.6078,
@@ -7213,7 +7213,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 514319,
         "water": 572723,
         "electricT1": 1.6085,
@@ -7740,7 +7740,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 514589,
         "water": 573005,
         "electricT1": 1.6092,
@@ -8267,7 +8267,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 514852,
         "water": 573283,
         "electricT1": 1.6099,
@@ -8794,7 +8794,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 515096,
         "water": 573521,
         "electricT1": 1.6106,
@@ -9321,7 +9321,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 515273,
         "water": 573717,
         "electricT1": 1.6111,
@@ -9848,7 +9848,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 515358,
         "water": 573822,
         "electricT1": 1.1613,
@@ -10375,7 +10375,7 @@
         "blowdownTime": 0
       },
       {
-        "time": "24:00",
+        "time": "0:00",
         "steam": 515358,
         "water": 573822,
         "electricT1": 1.1613,
