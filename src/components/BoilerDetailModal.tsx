@@ -153,7 +153,7 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
                       <th>Steam (MT)</th>
                       <th>Water (MT)</th>
                       <th>Water/Tonne</th>
-                      <th>Natural Gas (sm³)</th>
+                      <th>Natural Gas (SM³)</th>
                       <th>NG/Tonne</th>
                       <th>Electric ({boilerId === 3 ? 'kWh' : 'MWh'})</th>
                       <th>Waste Gas (Nm³)</th>
@@ -233,7 +233,7 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
                   </div>
 
                   <div className="chart-card">
-                    <h4>Natural Gas Usage Trend (sm³) <span className="chart-max">Max: {Math.max(...dailyData.map(d => d.naturalGas)).toLocaleString()} sm³</span></h4>
+                    <h4>Natural Gas Usage Trend (SM³) <span className="chart-max">Max: {Math.max(...dailyData.map(d => d.naturalGas)).toLocaleString()} SM³</span></h4>
                     <div className="simple-chart">
                       {dailyData.map((row, index) => {
                         const maxValue = Math.max(...dailyData.map(d => d.naturalGas));
@@ -247,7 +247,7 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
                                 height: `${percentage}%`,
                                 minHeight: '5px'
                               }}
-                              title={`${row.date}: ${row.naturalGas.toLocaleString()} sm³`}
+                              title={`${row.date}: ${row.naturalGas.toLocaleString()} SM³`}
                             />
                             <span className="chart-label">{row.date.split('/')[1]}</span>
                           </div>
@@ -317,8 +317,8 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
                                 <th>Water (MT)</th>
                                 <th>Electric T1 (MWh)</th>
                                 <th>Electric T2 (MWh)</th>
-                                <th>NG Burner 1 (sm³)</th>
-                                <th>NG Burner 2 (sm³)</th>
+                                <th>NG Burner 1 (SM³)</th>
+                                <th>NG Burner 2 (SM³)</th>
                                 <th>WG Burner 1 (Nm³)</th>
                                 <th>WG Burner 2 (Nm³)</th>
                                 <th>Feed Pump Temp (°C)</th>

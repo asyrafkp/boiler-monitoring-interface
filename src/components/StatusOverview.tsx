@@ -32,18 +32,18 @@ const StatusOverview: React.FC<StatusOverviewProps> = ({ boilers }) => {
       <div className="overview-card total-steam">
         <div className="overview-icon">🔥</div>
         <div className="overview-content">
-          <span className="overview-label">Total Steam</span>
+          <span className="overview-label">Total Steam Production Rate</span>
           <span className="overview-value">{totalSteam.toFixed(2)}</span>
-          <span className="overview-unit">t/h</span>
+          <span className="overview-unit">MT/h</span>
         </div>
       </div>
 
       <div className="overview-card total-ng">
         <div className="overview-icon">⚙️</div>
         <div className="overview-content">
-          <span className="overview-label">Total Natural Gas</span>
+          <span className="overview-label">Total Natural Gas Flow Rate</span>
           <span className="overview-value">{totalNG.toFixed(2)}</span>
-          <span className="overview-unit">MMBtu/h</span>
+          <span className="overview-unit">SM³/h</span>
         </div>
       </div>
 

@@ -64,18 +64,18 @@ const BoilerCard: React.FC<BoilerCardProps> = ({ boiler, onClick }) => {
       <div className="card-content">
         <div className="metric-group">
           <div className="metric">
-            <div className="metric-label">Steam Production</div>
+            <div className="metric-label">Steam Production Flow Rate</div>
             <div className="metric-value" style={{ color: getStatusColor(boiler.status) }}>
               {boiler.steam.toFixed(2)}
-              <span className="metric-unit">t/h</span>
+              <span className="metric-unit">MT/h</span>
             </div>
           </div>
 
           <div className="metric">
-            <div className="metric-label">Natural Gas</div>
+            <div className="metric-label">Natural Gas Flow Rate</div>
             <div className="metric-value">
               {boiler.ng.toFixed(2)}
-              <span className="metric-unit">MMBtu/h</span>
+              <span className="metric-unit">SM³/h</span>
             </div>
           </div>
         </div>
@@ -104,10 +104,10 @@ const BoilerCard: React.FC<BoilerCardProps> = ({ boiler, onClick }) => {
 
         <div className="metric-group">
           <div className="metric">
-            <div className="metric-label">Feed Water</div>
+            <div className="metric-label">Feed Water Flow Rate</div>
             <div className="metric-value">
               {boiler.water.toFixed(2)}
-              <span className="metric-unit">t/h</span>
+              <span className="metric-unit">MT/h</span>
             </div>
           </div>
         </div>
