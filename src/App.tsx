@@ -6,7 +6,6 @@ import BoilerCard from './components/BoilerCard'
 import StatusOverview from './components/StatusOverview'
 import { AdminPanel } from './components/AdminPanel'
 import { AdminSettings } from './components/AdminSettings'
-import { supabase } from './services/supabaseService'
 
 interface BoilerData {
   id: number
