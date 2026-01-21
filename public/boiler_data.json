@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-01-21T04:26:12.928Z",
-  "lastUpdate": "01/21/2026, 12:26:12 PM",
+  "timestamp": "2026-01-21T04:28:40.566Z",
+  "lastUpdate": "01/21/2026, 12:28:40 PM",
   "boilers": [
     {
       "id": 1,
@@ -17,7 +17,7 @@
       "steam": 0,
       "ng": 0,
       "ratio": 0,
-      "water": 0,
+      "water": 10,
       "maxCapacity": 18
     },
     {
@@ -26,7 +26,7 @@
       "steam": 10,
       "ng": 426,
       "ratio": 42.6,
-      "water": 36,
+      "water": 8,
       "maxCapacity": 16
     }
   ]

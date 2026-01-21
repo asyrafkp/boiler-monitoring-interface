@@ -89,15 +89,17 @@ function parseNGSteamSheet(worksheet) {
 function parseWaterSteamSheet(worksheet) {
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
   
-  // Start from row 8 (after headers at row 5-7)
-  for (let i = data.length - 1; i >= 8; i--) {
+  // Limit search to row 540 to match steam data search range
+  const maxRow = Math.min(data.length - 1, 540);
+  
+  for (let i = maxRow; i >= 8; i--) {
     const row = data[i];
-    if (!row || row.length < 17) continue;
+    if (!row || row.length < 18) continue;
     
-    // Water columns: B1(4), B2(10), B3(16)
-    const b1Water = parseFloat(row[4]) || 0;
-    const b2Water = parseFloat(row[10]) || 0;
-    const b3Water = parseFloat(row[16]) || 0;
+    // Water columns: B1(9), B2(15), B3(17) based on actual data at row 533
+    const b1Water = parseFloat(row[9]) || 0;
+    const b2Water = parseFloat(row[15]) || 0;
+    const b3Water = parseFloat(row[17]) || 0;
     
     if (b1Water > 0 || b2Water > 0 || b3Water > 0) {
       return {
