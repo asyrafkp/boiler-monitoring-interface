@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 
 // Force cache bust: v2
 export default defineConfig({
+  base: '/boiler-monitoring-interface/',
   plugins: [react()],
   define: {
     // Ensure environment variables are available to the browser
