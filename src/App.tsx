@@ -120,74 +120,43 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
     }
   }
 
-  // Fetch data from Supabase
+  // Fetch data from GitHub Pages JSON file
   const fetchBoilerData = async () => {
     setLoading(true)
     setError(null)
 
     try {
-      console.log('📊 Fetching boiler data from Supabase...')
+      console.log('📊 Fetching boiler data from JSON...')
       
-      // Fetch latest reading from Supabase
-      const { data, error: fetchError } = await supabase
-        .from('boiler_readings')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (fetchError) {
-        throw new Error(`Failed to fetch data: ${fetchError.message}`)
+      // Fetch from GitHub Pages hosted JSON file
+      const response = await fetch('/boiler-monitoring-interface/boiler_data.json')
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch data file')
       }
 
-      if (!data) {
-        throw new Error('No data available. Please upload an Excel file first.')
-      }
+      const data = await response.json()
+      
+      console.log('✅ Data fetched:', data)
 
-      console.log('✅ Data fetched from Supabase:', data)
-
-      // Map Supabase data to boiler state
-      const mappedBoilers: BoilerData[] = [
-        {
-          id: 1,
-          name: 'Boiler No. 1',
-          steam: data.b1_steam || 0,
-          ng: data.ng_ratio || 0,
-          ratio: data.ng_ratio || 0,
-          output: (data.b1_steam / 18) * 100 || 0,
-          water: data.b1_water || 0,
-          maxCapacity: 18,
-          status: determineStatus(data.b1_steam || 0, 18)
-        },
-        {
-          id: 2,
-          name: 'Boiler No. 2',
-          steam: data.b2_steam || 0,
-          ng: data.ng_ratio || 0,
-          ratio: data.ng_ratio || 0,
-          output: (data.b2_steam / 18) * 100 || 0,
-          water: data.b2_water || 0,
-          maxCapacity: 18,
-          status: determineStatus(data.b2_steam || 0, 18)
-        },
-        {
-          id: 3,
-          name: 'Boiler No. 3',
-          steam: data.b3_steam || 0,
-          ng: data.ng_ratio || 0,
-          ratio: data.ng_ratio || 0,
-          output: (data.b3_steam / 16) * 100 || 0,
-          water: data.b3_water || 0,
-          maxCapacity: 16,
-          status: determineStatus(data.b3_steam || 0, 16)
-        }
-      ]
+      // Map JSON data to boiler state
+      const mappedBoilers: BoilerData[] = data.boilers.map((boiler: any) => ({
+        id: boiler.id,
+        name: boiler.name,
+        steam: boiler.steam,
+        ng: boiler.ng,
+        ratio: boiler.ratio,
+        output: (boiler.steam / boiler.maxCapacity) * 100,
+        water: boiler.water,
+        maxCapacity: boiler.maxCapacity,
+        status: determineStatus(boiler.steam, boiler.maxCapacity)
+      }))
 
       setBoilers(mappedBoilers)
       formatUpdateTime()
       
-      // Format latest data timestamp from Supabase
-      const dataDate = new Date(data.created_at)
+      // Format latest data timestamp from JSON
+      const dataDate = new Date(data.timestamp)
       const formattedDate = dataDate.toLocaleString('en-GB', {
         day: '2-digit',
         month: '2-digit',
@@ -287,14 +256,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
               Next Update: <strong>{nextUpdate}</strong>
             </span>
             <span className="data-source">
-              Source: <strong>📊 Supabase (Live)</strong>
+              Source: <strong>📊 GitHub (Auto-updated)</strong>
             </span>
           </div>
         </div>
       </header>
 
       <main className="main-content">
-        {loading && <div className="loading-indicator">📡 Fetching data from Supabase...</div>}
+        {loading && <div className="loading-indicator">📡 Loading boiler data...</div>}
 
         <StatusOverview boilers={boilers} />
 
@@ -307,8 +276,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
 
       <footer className="app-footer">
         <p>📊 Latest Data Available: <strong>{latestDataTime}</strong></p>
-        <p className="footer-secondary">Data synced from Excel uploads | Auto-refresh every 30 seconds</p>
-        <p className="footer-tech">Powered by React + Supabase</p>
+        <p className="footer-secondary">Data auto-synced from OneDrive hourly via GitHub Actions</p>
+        <p className="footer-tech">Powered by React + GitHub Pages</p>
       </footer>
 
       {user?.userType === 'admin' && (

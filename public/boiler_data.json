@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-01-21T00:00:00.000Z",
+  "lastUpdate": "01/21/2026, 00:00:00 AM",
+  "boilers": [
+    {
+      "id": 1,
+      "name": "Boiler No. 1",
+      "steam": 0,
+      "ng": 0,
+      "ratio": 0,
+      "water": 0,
+      "maxCapacity": 18
+    },
+    {
+      "id": 2,
+      "name": "Boiler No. 2",
+      "steam": 0,
+      "ng": 0,
+      "ratio": 0,
+      "water": 0,
+      "maxCapacity": 18
+    },
+    {
+      "id": 3,
+      "name": "Boiler No. 3",
+      "steam": 0,
+      "ng": 0,
+      "ratio": 0,
+      "water": 0,
+      "maxCapacity": 16
+    }
+  ]
+}

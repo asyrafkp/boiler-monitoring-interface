@@ -54,11 +54,15 @@ jobs:
       - name: Install Node dependencies
         run: npm install
 
-      - name: Parse Excel and sync to Supabase
+      - name: Parse Excel and create JSON
+        run: node .github/scripts/excel_to_json.js
+        
+      - name: Parse Excel and sync to Supabase (optional backup)
         run: node .github/scripts/sync_to_supabase.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        continue-on-error: true
 
       - name: Configure Git
         run: |
@@ -69,13 +73,13 @@ jobs:
       - name: Commit and push
         if: always()
         run: |
-          git add data/boiler_data.xlsx 2>/dev/null || true
+          git add data/boiler_data.xlsx public/boiler_data.json 2>/dev/null || true
           
           # Check if there are actual changes
           if git diff --cached --quiet; then
             echo "No file changes to commit"
           else
-            git commit -m "chore: sync Excel data from OneDrive [automated]" || true
+            git commit -m "chore: sync data from OneDrive [automated]" || true
             git push origin main 2>&1 || echo "Push skipped (no changes or already up to date)"
           fi
 
