@@ -59,14 +59,17 @@ const BoilerDetailModal: React.FC<BoilerDetailModalProps> = ({ boilerId, boilerN
     try {
       setLoading(true)
       
+      // Add timestamp to prevent caching issues
+      const cacheBuster = `?v=${Date.now()}`
+      
       if (activeTab === 'daily') {
-        const response = await fetch(`/boiler-monitoring-interface/boiler_${boilerId}_daily.json`)
+        const response = await fetch(`/boiler-monitoring-interface/boiler_${boilerId}_daily.json${cacheBuster}`)
         if (response.ok) {
           const data = await response.json()
           setDailyData(data.dailyData || [])
         }
       } else {
-        const response = await fetch(`/boiler-monitoring-interface/boiler_${boilerId}_hourly.json`)
+        const response = await fetch(`/boiler-monitoring-interface/boiler_${boilerId}_hourly.json${cacheBuster}`)
         if (response.ok) {
           let data = await response.json()
           let hourlyDataToUse = data.hourlyData || {}
