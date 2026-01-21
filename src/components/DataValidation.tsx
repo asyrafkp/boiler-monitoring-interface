@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNotification } from '../contexts/NotificationContext';
 import './DataValidation.css';
 
 interface ValidationIssue {
@@ -12,6 +13,7 @@ interface ValidationIssue {
 }
 
 export const DataValidation: React.FC = () => {
+  const { addNotification } = useNotification();
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   const [isScanning, setIsScanning] = useState(false);
 
@@ -87,30 +89,21 @@ export const DataValidation: React.FC = () => {
                 });
               }
 
-              // Check for unusually high values (warning)
-              if (entry.steam && entry.steam > 100) {
-                foundIssues.push({
-                  id: `b${i}_steam_high_${idx}`,
-                  severity: 'warning',
-                  boiler: boilerName,
-                  metric: 'Steam',
-                  value: entry.steam,
-                  message: `Unusually high steam output: ${entry.steam} MT (exceeds typical capacity)`,
-                  date: entry.date
-                });
-              }
+              // Note: All readings are daily cumulative from public/boiler_*_daily.json
+              // Values vary by operational hours: 268 MT (24-hour full operation) vs 41 MT (partial day)
+              // Only flag if zero steam but consuming gas (indicates configuration issue, not anomaly)
 
               // Check for very low steam with high gas (efficiency issue)
               if (entry.steam && entry.naturalGas && entry.steam > 0 && entry.naturalGas > 0) {
                 const ratio = entry.steam / entry.naturalGas;
-                if (ratio < 0.01) {
+                if (ratio < 0.008) { // Daily cumulative ratio - partial day operations acceptable
                   foundIssues.push({
                     id: `b${i}_efficiency_${idx}`,
                     severity: 'warning',
                     boiler: boilerName,
                     metric: 'Efficiency',
                     value: ratio.toFixed(4),
-                    message: `Low efficiency: ${ratio.toFixed(4)} MT/SM³ (high gas use for low steam)`,
+                    message: `Low efficiency: ${ratio.toFixed(4)} MT/SM³ (possible efficiency decline or partial operation)`,
                     date: entry.date
                   });
                 }
@@ -133,6 +126,16 @@ export const DataValidation: React.FC = () => {
       }]);
     } finally {
       setIsScanning(false);
+      const criticalCount = issues.filter(i => i.severity === 'critical').length;
+      const warningCount = issues.filter(i => i.severity === 'warning').length;
+      
+      if (criticalCount > 0) {
+        addNotification(`Data validation: ${criticalCount} critical issue(s) found`, 'error');
+      } else if (warningCount > 0) {
+        addNotification(`Data validation: ${warningCount} warning(s) found`, 'warning');
+      } else {
+        addNotification('Data validation complete - no issues found', 'success');
+      }
     }
   };
 

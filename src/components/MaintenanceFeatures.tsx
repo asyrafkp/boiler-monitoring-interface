@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNotification } from '../contexts/NotificationContext';
 import './MaintenanceFeatures.css';
 
 interface MaintenanceRecord {
@@ -15,6 +16,7 @@ interface MaintenanceRecord {
 }
 
 export const MaintenanceFeatures: React.FC = () => {
+  const { addNotification } = useNotification();
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [filterBoiler, setFilterBoiler] = useState<'all' | '1' | '2' | '3'>('all');
@@ -89,12 +91,13 @@ export const MaintenanceFeatures: React.FC = () => {
       status: 'completed'
     });
     setShowForm(false);
-    alert('✅ Maintenance record added successfully!');
+    addNotification(`Boiler ${newRecord.boiler} ${newRecord.type} record added successfully`, 'success');
   };
 
   const handleDeleteRecord = (id: string) => {
     if (confirm('Delete this maintenance record?')) {
       saveRecords(records.filter(r => r.id !== id));
+      addNotification('Maintenance record deleted', 'info');
     }
   };
 

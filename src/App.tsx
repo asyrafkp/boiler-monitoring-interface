@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import './App.css'
 import { useAuth } from './contexts/AuthContext'
+import { NotificationProvider } from './contexts/NotificationContext'
 import LoginPage from './pages/LoginPage'
 import BoilerCard from './components/BoilerCard'
 import StatusOverview from './components/StatusOverview'
 import BoilerDetailModal from './components/BoilerDetailModal'
 import CumulativeDailyData from './components/CumulativeDailyData'
 import { AdminPanel } from './components/AdminPanel'
+import AlertNotifications from './components/AlertNotifications'
 
 interface BoilerData {
   id: number
@@ -279,7 +281,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
   }, [])
 
   return (
-    <div className="app-container">
+    <NotificationProvider>
+      <div className="app-container">
+        <AlertNotifications />
       <header className="app-header">
         <div className="header-content">
           <div className="header-top">
@@ -397,6 +401,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, logout }) => {
         />
       )}
     </div>
+    </NotificationProvider>
   )
 }
 

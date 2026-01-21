@@ -4,6 +4,7 @@ import { AdminSettings } from './AdminSettings';
 import { DataValidation } from './DataValidation';
 import { DashboardCustomization } from './DashboardCustomization';
 import { MaintenanceFeatures } from './MaintenanceFeatures';
+import UserManagement from './UserManagement';
 import './AdminPanel.css';
 
 interface SyncLog {
@@ -28,7 +29,7 @@ interface AdminPanelProps {
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState<'health' | 'data' | 'validation' | 'customization' | 'maintenance' | 'settings'>('health');
+  const [activeTab, setActiveTab] = useState<'health' | 'data' | 'validation' | 'customization' | 'maintenance' | 'user-management' | 'settings'>('health');
   const [isLoading, setIsLoading] = useState(false);
   const [syncLogs, setSyncLogs] = useState<SyncLog[]>([]);
   const [statusMessage, setStatusMessage] = useState('');
@@ -184,6 +185,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 onClick={() => setActiveTab('maintenance')}
               >
                 🔧 Maintenance
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'user-management' ? 'active' : ''}`}
+                onClick={() => setActiveTab('user-management')}
+              >
+                👥 Users
               </button>
               <button 
                 className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
@@ -407,6 +414,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             {activeTab === 'maintenance' && (
               <div className="tab-content">
                 <MaintenanceFeatures />
+              </div>
+            )}
+
+            {/* User Management Tab */}
+            {activeTab === 'user-management' && (
+              <div className="tab-content">
+                <UserManagement />
               </div>
             )}
 
