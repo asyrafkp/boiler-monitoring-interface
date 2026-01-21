@@ -68,10 +68,6 @@ export const AdminPanel: React.FC = () => {
     setUploadStatus('error');
     setIsLoading(false);
   };
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-GB');
