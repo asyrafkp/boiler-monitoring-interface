@@ -149,27 +149,54 @@ jobs:
           echo ""
           echo "=================================================="
           
-          # Try to download file with smbclient
+          # Try to download file with retry logic for locked files
           echo ""
-          echo "⚠️  IMPORTANT: Close the Excel file on your PC if it's open!"
-          echo "Attempting to download file with smbclient..."
+          echo "Attempting to download file (will retry if locked)..."
           mkdir -p data
           
-          if [ "$USE_GUEST" = true ]; then
-            echo "Using guest access to download..."
-            DOWNLOAD_OUTPUT=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$FILE_NAME\" data/boiler_data.xlsx" 2>&1)
-          else
-            echo "Using username to download..."
-            DOWNLOAD_OUTPUT=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"$FILE_NAME\" data/boiler_data.xlsx" 2>&1)
-          fi
+          DOWNLOAD_SUCCESS=false
+          MAX_RETRIES=3
           
-          echo "$DOWNLOAD_OUTPUT"
-          
-          # Check for sharing violation
-          if echo "$DOWNLOAD_OUTPUT" | grep -q "NT_STATUS_SHARING_VIOLATION"; then
+          for ATTEMPT in $(seq 1 $MAX_RETRIES); do
             echo ""
-            echo "❌ ERROR: File is currently open on your PC!"
-            echo "Please close the Excel file and run this workflow again."
+            echo "Attempt $ATTEMPT of $MAX_RETRIES..."
+            
+            if [ "$USE_GUEST" = true ]; then
+              DOWNLOAD_OUTPUT=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$FILE_NAME\" data/boiler_data.xlsx" 2>&1)
+            else
+              DOWNLOAD_OUTPUT=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"$FILE_NAME\" data/boiler_data.xlsx" 2>&1)
+            fi
+            
+            echo "$DOWNLOAD_OUTPUT"
+            
+            # Check if download succeeded
+            if [ -f "data/boiler_data.xlsx" ] && [ -s "data/boiler_data.xlsx" ]; then
+              echo "✅ File downloaded successfully!"
+              DOWNLOAD_SUCCESS=true
+              break
+            fi
+            
+            # Check for sharing violation
+            if echo "$DOWNLOAD_OUTPUT" | grep -q "NT_STATUS_SHARING_VIOLATION"; then
+              if [ $ATTEMPT -lt $MAX_RETRIES ]; then
+                echo "⚠️  File is locked (open in Excel). Waiting 5 seconds before retry..."
+                sleep 5
+              else
+                echo ""
+                echo "❌ File is still locked after $MAX_RETRIES attempts"
+                echo ""
+                echo "Options:"
+                echo "1. Close the Excel file and re-run this workflow"
+                echo "2. Or wait - Windows sometimes releases locks after a few minutes"
+                echo "3. Or enable AutoSave/OneDrive which allows simultaneous access"
+              fi
+            else
+              echo "❌ Download failed with different error"
+              break
+            fi
+          done
+          
+          if [ "$DOWNLOAD_SUCCESS" = false ]; then
             exit 1
           fi
           
