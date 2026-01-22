@@ -99,7 +99,7 @@ jobs:
           echo "🔍 Testing connectivity to device: $DEVICE_NAME"
           
           # Try to ping the device
-          if ! tailscale ping "$DEVICE_NAME" -c 1 --timeout=10s; then
+          if ! tailscale ping -c 1 --timeout=10s "$DEVICE_NAME"; then
             echo ""
             echo "❌ Error: Cannot reach device '$DEVICE_NAME'"
             echo ""
