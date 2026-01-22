@@ -211,15 +211,18 @@ jobs:
           echo "Root of share:"
           ls -la /mnt/tailscale_share/ || echo "Cannot list root"
           echo ""
-          echo "Looking for 'Production Latest' folder:"
-          ls -la /mnt/tailscale_share/ | grep -i production || echo "Not found in root"
+          
+          # Recursively search for files and folders (max 3 levels deep)
+          echo "🔍 Searching recursively (up to 3 levels deep):"
+          find /mnt/tailscale_share -maxdepth 3 -type d 2>/dev/null | head -30 || echo "Cannot search"
           echo ""
           
-          # If Production Latest exists, show its contents
-          if [ -d "/mnt/tailscale_share/Production Latest" ]; then
-            echo "Contents of 'Production Latest':"
-            ls -la "/mnt/tailscale_share/Production Latest/" | head -20
-          fi
+          echo "🔍 Searching for Excel files:"
+          find /mnt/tailscale_share -maxdepth 5 -type f -name "*.xlsx" 2>/dev/null | head -10 || echo "No Excel files found"
+          echo ""
+          
+          echo "🔍 Searching for 'Production' or 'JANUARY' in paths:"
+          find /mnt/tailscale_share -maxdepth 5 2>/dev/null | grep -i -E "(production|january)" | head -20 || echo "Not found"
           echo ""
           
           # Copy Excel file
