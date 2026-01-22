@@ -9,7 +9,8 @@ on:
 env:
   TAILSCALE_DEVICE: '100.111.83.23'  # Change this to your device IP or hostname
   SHARE_NAME: 'Desktop PC CCR'  # Change this to your share name (from list above)
-  FILE_NAME: 'Production latest/2026/01 JANUARY 2026/REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx'  # Path to Excel file
+  FILE_NAME: 'boiler_data_sync.xlsx'  # Unlocked copy created by windows-file-watcher.ps1
+  # Original file (locked): 'Production latest/2026/01 JANUARY 2026/REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx'
 
 jobs:
   sync:
