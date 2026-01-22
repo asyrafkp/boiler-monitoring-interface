@@ -2,9 +2,11 @@ name: Sync from Tailscale Network
 
 on:
   schedule:
-    # Run every hour
-    - cron: '0 * * * *'
-  workflow_dispatch:
+    # Run at 2 AM daily (when file is less likely to be locked)
+    - cron: '0 2 * * *'
+    # Also run at 2 PM for mid-day update attempt
+    - cron: '0 14 * * *'
+  workflow_dispatch:  # Allow manual trigger anytime
 
 env:
   TAILSCALE_DEVICE: '100.111.83.23'
