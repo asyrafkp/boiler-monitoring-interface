@@ -98,8 +98,14 @@ jobs:
           # Test if device is reachable
           echo "🔍 Testing connectivity to device: $DEVICE_NAME"
           
-          # Try to ping the device
-          if ! tailscale ping -c 1 --timeout=10s "$DEVICE_NAME"; then
+          # Try to ping the device (accept both direct and relay connections)
+          PING_OUTPUT=$(tailscale ping -c 1 --timeout=10s "$DEVICE_NAME" 2>&1 || true)
+          echo "$PING_OUTPUT"
+          
+          # Check if we got a pong response (either direct or via DERP relay)
+          if echo "$PING_OUTPUT" | grep -q "pong from"; then
+            echo "✅ Device is reachable"
+          else
             echo ""
             echo "❌ Error: Cannot reach device '$DEVICE_NAME'"
             echo ""
@@ -107,14 +113,10 @@ jobs:
             echo "1. Check if your PC is online and Tailscale is running"
             echo "2. On your PC, run: tailscale status"
             echo "3. Find your device name or IP address"
-            echo "4. Update TAILSCALE_DEVICE_NAME secret with:"
-            echo "   - Device name (e.g., petrogas-ccr-pc)"
-            echo "   - OR Tailscale IP (e.g., 100.111.83.23)"
+            echo "4. Update TAILSCALE_DEVICE in workflow file (.github/workflows/sync-tailscale.yml)"
             echo ""
             echo "Available devices in this Tailscale network:"
             tailscale status || true
-            echo ""
-            echo "💡 Tip: If device name is hidden (***), use the IP address instead"
             exit 1
           fi
           
