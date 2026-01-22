@@ -178,50 +178,44 @@ jobs:
             smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "allinfo \"$FILE_NAME\"" 2>&1 | head -5
           fi
           
-          # Download Excel file from SMB share
+          # Try to read the locked file directly using SMB with different options
           echo ""
           echo "========================================="
-          echo "Step 1: Creating copy on remote PC via PowerShell..."
+          echo "Attempting to read locked Excel file..."
           echo "========================================="
           
           DEVICE_NAME="${{ env.TAILSCALE_DEVICE }}"
           SHARE_NAME="${{ env.SHARE_NAME }}"
           ORIGINAL_FILE="${{ env.ORIGINAL_FILE }}"
-          COPY_FILE="${{ env.FILE_NAME }}"
-          
-          # Create PowerShell command to copy the locked file
-          PS_CMD="Copy-Item -Path 'C:\\Users\\CCR\\Desktop\\Production latest\\2026\\01 JANUARY 2026\\REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx' -Destination 'C:\\Users\\CCR\\Desktop\\Desktop PC CCR\\${COPY_FILE}' -Force"
-          
-          echo "Executing remote copy command..."
-          echo "Command: $PS_CMD"
-          
-          # Try to execute PowerShell via remote execution (requires psexec or schtasks)
-          # Since we can't use psexec, create a batch file and try to execute it
-          cat > /tmp/copy_excel.bat << EOF
-@echo off
-powershell.exe -ExecutionPolicy Bypass -Command "$PS_CMD"
-EOF
-          
-          # Upload batch file to share
-          if [ "$USE_GUEST" = true ]; then
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "put /tmp/copy_excel.bat copy_excel.bat" 2>&1
-          else
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "put /tmp/copy_excel.bat copy_excel.bat" 2>&1
-          fi
-          
-          echo ""
-          echo "⚠️  Batch file uploaded to remote share"
-          echo "Note: Batch file needs to be executed once on remote PC to enable auto-copy"
-          echo "Location: \\\\$DEVICE_NAME\\$SHARE_NAME\\copy_excel.bat"
-          echo ""
-          echo "========================================="
-          echo "Step 2: Downloading Excel file..."
-          echo "========================================="
-          
-          ORIGINAL_FILE="${{ env.FILE_NAME }}"  # Using the copy file now
           
           # Convert path for SMB
           SMB_PATH=$(echo "$ORIGINAL_FILE" | sed 's/\//\\/g')
+          
+          echo "Attempting direct read of locked file..."
+          echo "File: $ORIGINAL_FILE"
+          
+          # Try reading with smbclient using read-only mode
+          if [ "$USE_GUEST" = true ]; then
+            # Try to read the locked file with read-only mode
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1 | tee /tmp/smb_output.txt
+          else
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1 | tee /tmp/smb_output.txt
+          fi
+          
+          # Check if download succeeded (locked file read)
+          if [ -f "data/boiler_data.xlsx" ]; then
+            echo "✅ Successfully read locked file!"
+            echo "File size: $(stat -f%z data/boiler_data.xlsx 2>/dev/null || stat -c%s data/boiler_data.xlsx)"
+          else
+            echo "❌ Cannot read locked file (NT_STATUS_SHARING_VIOLATION)"
+            echo ""
+            echo "========================================="
+            echo "Falling back to copy file..."
+            echo "========================================="
+            
+            # Fall back to the manually created copy
+            ORIGINAL_FILE="${{ env.FILE_NAME }}"
+            SMB_PATH=$(echo "$ORIGINAL_FILE" | sed 's/\//\\/g')
           
           echo "Source: $ORIGINAL_FILE"
           echo "SMB path: $SMB_PATH"
