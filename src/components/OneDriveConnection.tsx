@@ -18,7 +18,8 @@ export const OneDriveConnection: React.FC = () => {
     githubToken: localStorage.getItem('github_token') || '',
     
     // OneDrive File
-    fileName: localStorage.getItem('onedrive_filename') || 'REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx'
+    fileName: localStorage.getItem('onedrive_filename') || 'REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx',
+    folderPath: localStorage.getItem('onedrive_folder_path') || ''
   });
 
   const saveConfig = () => {
@@ -28,6 +29,7 @@ export const OneDriveConnection: React.FC = () => {
     localStorage.setItem('github_repo', config.githubRepo);
     localStorage.setItem('github_token', config.githubToken);
     localStorage.setItem('onedrive_filename', config.fileName);
+    localStorage.setItem('onedrive_folder_path', config.folderPath);
     setStatus({ type: 'success', message: 'Configuration saved!' });
     setTimeout(() => setStatus({ type: null, message: '' }), 3000);
   };
@@ -75,7 +77,8 @@ export const OneDriveConnection: React.FC = () => {
           repo: config.githubRepo,
           token: config.githubToken
         },
-        config.fileName
+        config.fileName,
+        config.folderPath
       );
 
       setStatus({
@@ -173,7 +176,16 @@ export const OneDriveConnection: React.FC = () => {
               value={config.fileName}
               onChange={(e) => setConfig({ ...config, fileName: e.target.value })}
             />
-            <small>File can be anywhere in your OneDrive (searches all folders)</small>
+          </div>
+          <div className="form-group">
+            <label>Folder Path (Optional - Faster!)</label>
+            <input
+              type="text"
+              placeholder="e.g., Documents/Boiler Reports or leave empty for root"
+              value={config.folderPath}
+              onChange={(e) => setConfig({ ...config, folderPath: e.target.value })}
+            />
+            <small>💡 Providing folder path avoids SPO license requirement and is much faster!</small>
           </div>
         </div>
       </div>

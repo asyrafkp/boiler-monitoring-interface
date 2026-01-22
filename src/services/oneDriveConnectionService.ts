@@ -174,13 +174,49 @@ async function findFileRecursively(
  */
 export async function getOneDriveShareLink(
   accessToken: string,
-  fileName: string
+  fileName: string,
+  folderPath?: string
 ): Promise<string> {
   try {
-    console.log('Searching OneDrive for:', fileName);
+    console.log('Searching OneDrive for:', fileName, folderPath ? `in folder: ${folderPath}` : '');
     
-    // For personal accounts without SPO license, use recursive folder listing
-    const file = await findFileRecursively(accessToken, fileName);
+    let file: any = null;
+    
+    // If folder path provided, use direct path API (much faster, no SPO license needed)
+    if (folderPath && folderPath.trim()) {
+      const cleanPath = folderPath.trim().replace(/^\/+|\/+$/g, ''); // Remove leading/trailing slashes
+      const pathUrl = `https://graph.microsoft.com/v1.0/me/drive/root:/${cleanPath}:/children`;
+      
+      const pathResponse = await fetch(pathUrl, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (pathResponse.ok) {
+        const pathData = await pathResponse.json();
+        const files = pathData.value || [];
+        file = files.find((f: any) => 
+          f.name.toLowerCase() === fileName.toLowerCase() && f.file
+        );
+        
+        if (!file) {
+          const excelFiles = files.filter((f: any) => f.name.match(/\.xlsx?$/i) && f.file);
+          const fileList = excelFiles.map((f: any) => f.name).join('\n  - ');
+          throw new Error(
+            `File not found in folder: ${folderPath}\n\n` +
+            `Found ${excelFiles.length} Excel files:\n  - ${fileList}\n\n` +
+            `Check the filename matches exactly.`
+          );
+        }
+      } else {
+        throw new Error(`Folder not found: ${folderPath}\n\nCheck the folder path is correct.`);
+      }
+    } else {
+      // No folder path - use recursive search (slower, may hit SPO license)
+      file = await findFileRecursively(accessToken, fileName);
+    }
     
     if (!file) {
       // Try to list some Excel files to help user
@@ -198,8 +234,8 @@ export async function getOneDriveShareLink(
         
         throw new Error(
           `File not found: ${fileName}\n\n` +
-          `First ${excelFiles.length} Excel files in root:\n  - ${fileList}\n\n` +
-          `Copy the exact filename (note: search depth limited to 5 folders deep).`
+          `Excel files in root folder:\n  - ${fileList}\n\n` +
+          `💡 TIP: Provide the folder path for faster search without SPO license!`
         );
       }
       
@@ -208,7 +244,7 @@ export async function getOneDriveShareLink(
         `Make sure:\n` +
         `1. The file exists in your OneDrive\n` +
         `2. The filename is exactly correct (including spaces)\n` +
-        `3. The file is within 5 folders from root`
+        `3. Consider providing the folder path for faster search`
       );
     }
 
@@ -340,14 +376,15 @@ export async function updateGitHubSecret(
 export async function refreshOneDriveConnection(
   oneDriveConfig: OneDriveAuthConfig,
   githubConfig: GitHubConfig,
-  fileName: string
+  fileName: string,
+  folderPath?: string
 ): Promise<{ shareLink: string; message: string }> {
   try {
     // Step 1: Authenticate with Microsoft
     const accessToken = await authenticateOneDrive(oneDriveConfig);
 
     // Step 2: Get OneDrive share link
-    const shareLink = await getOneDriveShareLink(accessToken, fileName);
+    const shareLink = await getOneDriveShareLink(accessToken, fileName, folderPath);
 
     // Step 3: Update GitHub secret
     await updateGitHubSecret(githubConfig, 'ONEDRIVE_LINK', shareLink);
