@@ -13,6 +13,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Validate Tailscale Auth Key
+        run: |
+          if [ -z "${{ secrets.TAILSCALE_AUTHKEY }}" ]; then
+            echo "❌ Error: TAILSCALE_AUTHKEY secret is not set"
+            echo ""
+            echo "Please generate an auth key at: https://login.tailscale.com/admin/settings/keys"
+            echo "Make sure to:"
+            echo "  ✅ Check 'Ephemeral' (auto-cleanup)"
+            echo "  ✅ Check 'Reusable' (use multiple times)"
+            echo "  ✅ Set expiration to at least 90 days"
+            echo ""
+            echo "Then add it as TAILSCALE_AUTHKEY secret at:"
+            echo "https://github.com/${{ github.repository }}/settings/secrets/actions"
+            exit 1
+          fi
+          
+          # Check if key starts with tskey-auth-
+          KEY="${{ secrets.TAILSCALE_AUTHKEY }}"
+          if [[ ! "$KEY" =~ ^tskey-auth- ]]; then
+            echo "❌ Error: Auth key format is invalid"
+            echo "Expected format: tskey-auth-..."
+            echo "Your key starts with: ${KEY:0:10}..."
+            exit 1
+          fi
+          
+          echo "✅ Auth key format looks valid"
+
       - name: Setup Tailscale
         uses: tailscale/github-action@v2
         with:
