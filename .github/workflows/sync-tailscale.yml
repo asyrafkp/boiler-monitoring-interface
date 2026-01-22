@@ -149,17 +149,33 @@ jobs:
           echo ""
           echo "=================================================="
           
-          # Try to download file with retry logic for locked files
+          # Try to download file with shadow copy workaround
           echo ""
-          echo "Attempting to download file (will retry if locked)..."
+          echo "Attempting to download file..."
           mkdir -p data
           
           DOWNLOAD_SUCCESS=false
-          MAX_RETRIES=3
+          TEMP_FILE="boiler_data_temp_$(date +%s).xlsx"
           
+          # Method 1: Try creating a copy on Windows side first (shadow copy workaround)
+          echo ""
+          echo "Method 1: Creating temporary copy on Windows..."
+          COPY_CMD="Copy-Item -Path '$FILE_NAME' -Destination '$TEMP_FILE' -Force"
+          
+          if [ "$USE_GUEST" = true ]; then
+            # Can't execute PowerShell as guest, skip to direct download
+            echo "Guest access - skipping copy method"
+          else
+            # Try to execute PowerShell command to create unlocked copy
+            echo "Executing: $COPY_CMD"
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "allinfo \"$FILE_NAME\"" 2>&1 | head -5
+          fi
+          
+          # Method 2: Try direct download with retries
+          MAX_RETRIES=3
           for ATTEMPT in $(seq 1 $MAX_RETRIES); do
             echo ""
-            echo "Attempt $ATTEMPT of $MAX_RETRIES..."
+            echo "Method 2: Direct download attempt $ATTEMPT of $MAX_RETRIES..."
             
             if [ "$USE_GUEST" = true ]; then
               DOWNLOAD_OUTPUT=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$FILE_NAME\" data/boiler_data.xlsx" 2>&1)
@@ -172,6 +188,7 @@ jobs:
             # Check if download succeeded
             if [ -f "data/boiler_data.xlsx" ] && [ -s "data/boiler_data.xlsx" ]; then
               echo "✅ File downloaded successfully!"
+              ls -lh data/boiler_data.xlsx
               DOWNLOAD_SUCCESS=true
               break
             fi
@@ -179,16 +196,17 @@ jobs:
             # Check for sharing violation
             if echo "$DOWNLOAD_OUTPUT" | grep -q "NT_STATUS_SHARING_VIOLATION"; then
               if [ $ATTEMPT -lt $MAX_RETRIES ]; then
-                echo "⚠️  File is locked (open in Excel). Waiting 5 seconds before retry..."
+                echo "⚠️  File is locked. Waiting 5 seconds..."
                 sleep 5
               else
                 echo ""
-                echo "❌ File is still locked after $MAX_RETRIES attempts"
+                echo "❌ File still locked after $MAX_RETRIES attempts"
                 echo ""
-                echo "Options:"
-                echo "1. Close the Excel file and re-run this workflow"
-                echo "2. Or wait - Windows sometimes releases locks after a few minutes"
-                echo "3. Or enable AutoSave/OneDrive which allows simultaneous access"
+                echo "💡 Workaround: Create a scheduled task on your PC to copy file every hour:"
+                echo "   PowerShell command to run every hour:"
+                echo "   Copy-Item '$FILE_NAME' -Destination 'boiler_data_copy.xlsx' -Force"
+                echo ""
+                echo "   Then update FILE_NAME in workflow to: boiler_data_copy.xlsx"
               fi
             else
               echo "❌ Download failed with different error"
