@@ -80,13 +80,13 @@ Add these secrets:
 |------------|-------|---------|
 | `TAILSCALE_OAUTH_CLIENT_ID` | OAuth client ID from Step 2 | `k...` |
 | `TAILSCALE_OAUTH_SECRET` | OAuth secret from Step 2 | `tskey-client-...` |
-| `TAILSCALE_DEVICE_NAME` | Your PC's device name (without domain) | `DESKTOP-ABC123` |
+| `TAILSCALE_DEVICE_NAME` | Your PC's device name (short or full Tailscale name) | `DESKTOP-ABC123` or `DESKTOP-ABC123.tailnet-abc.ts.net` |
 | `SHARE_NAME` | SMB share name from Step 3 | `BoilerData` |
 | `SHARE_USERNAME` | Your Windows username | `YourName` |
 | `SHARE_PASSWORD` | Your Windows password | `YourPassword` |
 | `FILE_NAME` | Excel filename in the share | `REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx` |
 
-**Important:** Use just the device name (e.g., `DESKTOP-ABC123`), not the full Tailscale name.
+**Note:** Both short name (`DESKTOP-ABC123`) and full Tailscale name work. Use whichever `tailscale status` shows.
 
 ## Step 5: Enable the Workflow
 
@@ -127,7 +127,8 @@ To avoid conflicts, disable the OneDrive workflow:
 
 1. **Check Tailscale is running** on your PC
 2. **Verify device name** - use `tailscale status` to confirm
-3. **Don't include domain** - use `DESKTOP-ABC123`, not `DESKTOP-ABC123.tailnet-abc.ts.net`
+3. **Try the full Tailscale name** - use `DESKTOP-ABC123.tailnet-abc.ts.net` if short name doesn't work
+4. **Or use Tailscale IP** - e.g., `100.64.123.456` (find with `tailscale ip -4`)
 
 ### "Permission denied" error
 
