@@ -28,27 +28,40 @@ tailscale status
 ```
 Note down your **device name** (e.g., `DESKTOP-ABC123`)
 
-## Step 2: Create Tailscale OAuth Client
+## Step 2: Create a Tag for GitHub Actions
+
+1. Go to https://login.tailscale.com/admin/acls
+2. In the ACL editor, find the `"tagOwners"` section
+3. Add a tag for CI/GitHub Actions:
+   ```json
+   "tagOwners": {
+     "tag:ci": ["autogroup:admin"],
+   },
+   ```
+4. Click **Save**
+
+**Note:** Tags are required for OAuth clients. The tag `tag:ci` lets GitHub Actions create nodes in your network.
+
+## Step 3: Create Tailscale OAuth Client
 
 1. Go to https://login.tailscale.com/admin/settings/trust-credentials
-2. Click **New credentials**
-3. Select **OAuth client**
-4. For **Scopes**, select:
-   - ✅ `devices:read` (to connect to your devices)
-   - ✅ `devices:write` (if needed, or leave unchecked)
+2. Click **New credentials** → **OAuth client**
+3. For **Scopes**, select:
+   - ✅ **`auth_keys:write`** (writable auth_keys scope - **required**)
+4. For **Tags**, enter: `tag:ci` (the tag you created in Step 2)
 5. Click **Generate client**
 6. Copy the **Client ID** and **Client Secret** (you'll need these for GitHub)
 7. ⚠️ **Important:** Save these now - you won't see the secret again!
 
-## Step 3: Create SMB Share on Windows
+## Step 4: Create SMB Share on Windows
 
-### 3.1 Create a folder for the Excel file (if not already)
+### 4.1 Create a folder for the Excel file (if not already)
 
 For example: `C:\BoilerData\`
 
 Put your Excel file there (e.g., `REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx`)
 
-### 3.2 Share the folder
+### 4.2 Share the folder
 
 1. Right-click the folder → **Properties**
 2. Go to **Sharing** tab
@@ -59,7 +72,7 @@ Put your Excel file there (e.g., `REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx`)
 7. Add your Windows user with **Read** permission
 8. Click **OK** to close all dialogs
 
-### 3.3 Test the share locally
+### 4.3 Test the share locally
 
 Open PowerShell and test:
 ```powershell
@@ -70,7 +83,7 @@ net use \\localhost\BoilerData
 dir \\localhost\BoilerData
 ```
 
-## Step 4: Configure GitHub Secrets
+## Step 5: Configure GitHub Secrets
 
 Go to your GitHub repo → **Settings** → **Secrets and variables** → **Actions**
 
@@ -78,17 +91,17 @@ Add these secrets:
 
 | Secret Name | Value | Example |
 |------------|-------|---------|
-| `TAILSCALE_OAUTH_CLIENT_ID` | OAuth client ID from Step 2 | `k...` |
-| `TAILSCALE_OAUTH_SECRET` | OAuth secret from Step 2 | `tskey-client-...` |
+| `TAILSCALE_OAUTH_CLIENT_ID` | OAuth client ID from Step 3 | `k...` |
+| `TAILSCALE_OAUTH_SECRET` | OAuth secret from Step 3 | `tskey-client-...` |
 | `TAILSCALE_DEVICE_NAME` | Your PC's device name (short or full Tailscale name) | `DESKTOP-ABC123` or `DESKTOP-ABC123.tailnet-abc.ts.net` |
-| `SHARE_NAME` | SMB share name from Step 3 | `BoilerData` |
+| `SHARE_NAME` | SMB share name from Step 4 | `BoilerData` |
 | `SHARE_USERNAME` | Your Windows username | `YourName` |
 | `SHARE_PASSWORD` | Your Windows password | `YourPassword` |
 | `FILE_NAME` | Excel filename in the share | `REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx` |
 
 **Note:** Both short name (`DESKTOP-ABC123`) and full Tailscale name work. Use whichever `tailscale status` shows.
 
-## Step 5: Enable the Workflow
+## Step 6: Enable the Workflow
 
 The workflow is already created: `.github/workflows/sync-tailscale.yml`
 
@@ -105,7 +118,7 @@ If successful, you'll see:
 - ✅ JSON updated
 - ✅ Changes committed
 
-## Step 6: Disable Old OneDrive Workflow
+## Step 7: Disable Old OneDrive Workflow
 
 To avoid conflicts, disable the OneDrive workflow:
 
