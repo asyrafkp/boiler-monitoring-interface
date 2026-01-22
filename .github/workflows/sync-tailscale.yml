@@ -126,11 +126,15 @@ jobs:
           sudo mkdir -p /mnt/tailscale_share
           
           # Mount with or without credentials
-          if [ -n "$SHARE_USERNAME" ] && [ -n "$SHARE_PASSWORD" ]; then
-            echo "🔐 Mounting with credentials..."
-            # Create credentials file for mount
+          if [ -n "$SHARE_USERNAME" ]; then
+            echo "🔐 Mounting with username: $SHARE_USERNAME"
+            # Create credentials file for mount (handle empty password)
             echo "username=$SHARE_USERNAME" > /tmp/smb_creds
-            echo "password=$SHARE_PASSWORD" >> /tmp/smb_creds
+            if [ -n "$SHARE_PASSWORD" ]; then
+              echo "password=$SHARE_PASSWORD" >> /tmp/smb_creds
+            else
+              echo "password=" >> /tmp/smb_creds
+            fi
             chmod 600 /tmp/smb_creds
             
             # Mount with credentials
