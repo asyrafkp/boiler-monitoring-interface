@@ -238,46 +238,19 @@ jobs:
             else
               smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"${{ env.FILE_NAME }}\" data/boiler_data.xlsx" 2>&1 | tee /tmp/copy_attempt.txt
             fi
-          
-          # Download the file (read-only access works even if locked)
-          echo "Downloading..."
-          if [ "$USE_GUEST" = true ]; then
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1 | tee /tmp/download.log
-          else
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1 | tee /tmp/download.log
           fi
           
-          # Check if download succeeded
+          # Verify final download status
           if [ -f "data/boiler_data.xlsx" ] && [ -s "data/boiler_data.xlsx" ]; then
             echo ""
             echo "✅ Excel file downloaded successfully!"
             ls -lh data/boiler_data.xlsx
-            DOWNLOAD_SUCCESS=true
           else
             echo ""
-            echo "⚠️  Download failed"
-            cat /tmp/download.log
-            echo ""
-            echo "Note: Even if file shows 'NT_STATUS_SHARING_VIOLATION',"
-            echo "      read-only access often works. If download failed,"
-            echo "      workflow will continue with existing data."
-            DOWNLOAD_SUCCESS=false
+            echo "❌ All download methods failed"
+            echo "Workflow will exit"
+            exit 1
           fi
-          
-          echo "========================================="
-          
-          # Method 2: Try direct download with retries
-          MAX_RETRIES=3
-          for ATTEMPT in $(seq 1 $MAX_RETRIES); do
-            echo ""
-            echo "Method 2: Direct download attempt $ATTEMPT of $MAX_RETRIES..."
-            echo "File path: $FILE_TO_DOWNLOAD"
-            
-            # Convert forward slashes to backslashes for SMB
-            SMB_PATH=$(echo "$FILE_TO_DOWNLOAD" | sed 's/\//\\/g')
-            echo "SMB path: $SMB_PATH"
-            
-            if [ "$USE_GUEST" = true ]; then
               echo "Command: smbclient //$DEVICE_NAME/$SHARE_NAME -N -c 'get \"$SMB_PATH\" data/boiler_data.xlsx'"
               smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1 | tee /tmp/download.log
               DOWNLOAD_OUTPUT=$(cat /tmp/download.log)
