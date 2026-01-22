@@ -182,33 +182,98 @@ jobs:
           # Delete old files to ensure fresh download
           rm -f data/boiler_data.xlsx
           
-          # Check if unlocked sync file exists, otherwise use original
+          # Strategy: Read locked file and create snapshot copy
           echo ""
-          echo "Checking for unlocked sync file..."
+          echo "========================================="
+          echo "Creating unlocked snapshot from locked file..."
+          echo "========================================="
+          
           DEVICE_NAME="${{ env.TAILSCALE_DEVICE }}"
           SHARE_NAME="${{ env.SHARE_NAME }}"
-          SYNC_FILE="${{ env.FILE_NAME }}"
           ORIGINAL_FILE="${{ env.ORIGINAL_FILE }}"
+          SNAPSHOT_FILE="boiler_data_snapshot_$(date +%Y%m%d_%H%M%S).xlsx"
+          
+          # Convert path for SMB
+          ORIGINAL_SMB_PATH=$(echo "$ORIGINAL_FILE" | sed 's/\//\\/g')
+          
+          echo "Original file: $ORIGINAL_FILE"
+          echo "Snapshot file: $SNAPSHOT_FILE"
+          echo ""
+          
+          # Step 1: Try to read the locked file to temp location
+          echo "Step 1: Reading locked file (read-only access)..."
+          TEMP_FILE="/tmp/boiler_temp.xlsx"
+          rm -f "$TEMP_FILE"
           
           if [ "$USE_GUEST" = true ]; then
-            if smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "ls \"$SYNC_FILE\"" 2>&1 | grep -q "$SYNC_FILE"; then
-              echo "✅ Found unlocked sync file: $SYNC_FILE"
-              FILE_TO_DOWNLOAD="$SYNC_FILE"
-            else
-              echo "⚠️  Sync file not found, using original: $ORIGINAL_FILE"
-              echo "   (File may be locked, but we'll try anyway)"
-              FILE_TO_DOWNLOAD="$ORIGINAL_FILE"
-            fi
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$ORIGINAL_SMB_PATH\" \"$TEMP_FILE\"" 2>&1 | tee /tmp/read.log || true
           else
-            if smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "ls \"$SYNC_FILE\"" 2>&1 | grep -q "$SYNC_FILE"; then
-              echo "✅ Found unlocked sync file: $SYNC_FILE"
-              FILE_TO_DOWNLOAD="$SYNC_FILE"
-            else
-              echo "⚠️  Sync file not found, using original: $ORIGINAL_FILE"
-              echo "   (File may be locked, but we'll try anyway)"
-              FILE_TO_DOWNLOAD="$ORIGINAL_FILE"
-            fi
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"$ORIGINAL_SMB_PATH\" \"$TEMP_FILE\"" 2>&1 | tee /tmp/read.log || true
           fi
+          
+          # Check if we successfully read the file
+          if [ -f "$TEMP_FILE" ] && [ -s "$TEMP_FILE" ]; then
+            echo "✅ Successfully read locked file!"
+            ls -lh "$TEMP_FILE"
+            
+            # Step 2: Upload as unlocked snapshot on the share
+            echo ""
+            echo "Step 2: Creating unlocked snapshot on share..."
+            if [ "$USE_GUEST" = true ]; then
+              smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "put \"$TEMP_FILE\" \"$SNAPSHOT_FILE\"" 2>&1
+            else
+              smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "put \"$TEMP_FILE\" \"$SNAPSHOT_FILE\"" 2>&1
+            fi
+            
+            echo "✅ Snapshot created on remote share"
+            
+            # Step 3: Download the snapshot
+            echo ""
+            echo "Step 3: Downloading unlocked snapshot..."
+            if [ "$USE_GUEST" = true ]; then
+              smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$SNAPSHOT_FILE\" data/boiler_data.xlsx" 2>&1
+            else
+              smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"$SNAPSHOT_FILE\" data/boiler_data.xlsx" 2>&1
+            fi
+            
+            if [ -f "data/boiler_data.xlsx" ] && [ -s "data/boiler_data.xlsx" ]; then
+              echo "✅ Snapshot downloaded successfully!"
+              ls -lh data/boiler_data.xlsx
+              DOWNLOAD_SUCCESS=true
+              
+              # Clean up: delete old snapshots (keep only last 3)
+              echo ""
+              echo "Cleaning up old snapshots..."
+              if [ "$USE_GUEST" = true ]; then
+                smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "ls boiler_data_snapshot_*.xlsx" 2>&1 | grep "boiler_data_snapshot" | awk '{print $1}' | sort -r | tail -n +4 | while read file; do
+                  smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "del \"$file\"" 2>&1 || true
+                done
+              else
+                smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "ls boiler_data_snapshot_*.xlsx" 2>&1 | grep "boiler_data_snapshot" | awk '{print $1}' | sort -r | tail -n +4 | while read file; do
+                  smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "del \"$file\"" 2>&1 || true
+                done
+              fi
+            else
+              echo "❌ Snapshot download failed"
+              DOWNLOAD_SUCCESS=false
+            fi
+            
+            # Clean up temp file
+            rm -f "$TEMP_FILE"
+          else
+            echo "⚠️  Could not read locked file"
+            cat /tmp/read.log
+            DOWNLOAD_SUCCESS=false
+          fi
+          
+          echo ""
+          echo "========================================="
+          if [ "$DOWNLOAD_SUCCESS" = true ]; then
+            echo "✅ Download completed successfully!"
+          else
+            echo "⚠️  Download failed - will use existing data"
+          fi
+          echo "========================================="
           
           # Method 2: Try direct download with retries
           MAX_RETRIES=3
