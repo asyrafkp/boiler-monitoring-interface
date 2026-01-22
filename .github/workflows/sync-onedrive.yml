@@ -36,6 +36,7 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_REFRESH_TOKEN: ${{ secrets.AZURE_REFRESH_TOKEN }}
           ONEDRIVE_ITEM_ID: ${{ secrets.ONEDRIVE_ITEM_ID }}
           ONEDRIVE_FILE_NAME: ${{ secrets.ONEDRIVE_FILE_NAME }}
           ONEDRIVE_LINK: ${{ secrets.ONEDRIVE_LINK }}
