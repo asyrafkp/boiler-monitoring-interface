@@ -93,6 +93,8 @@ jobs:
           
           # Test if device is reachable
           echo "🔍 Testing connectivity to device: $DEVICE_NAME"
+          
+          # Try to ping the device
           if ! tailscale ping "$DEVICE_NAME" -c 1 --timeout=10s; then
             echo ""
             echo "❌ Error: Cannot reach device '$DEVICE_NAME'"
@@ -100,11 +102,15 @@ jobs:
             echo "Troubleshooting steps:"
             echo "1. Check if your PC is online and Tailscale is running"
             echo "2. On your PC, run: tailscale status"
-            echo "3. Find your device name (e.g., DESKTOP-ABC123)"
-            echo "4. Update TAILSCALE_DEVICE_NAME secret with the correct name"
+            echo "3. Find your device name or IP address"
+            echo "4. Update TAILSCALE_DEVICE_NAME secret with:"
+            echo "   - Device name (e.g., petrogas-ccr-pc)"
+            echo "   - OR Tailscale IP (e.g., 100.111.83.23)"
             echo ""
             echo "Available devices in this Tailscale network:"
             tailscale status || true
+            echo ""
+            echo "💡 Tip: If device name is hidden (***), use the IP address instead"
             exit 1
           fi
           

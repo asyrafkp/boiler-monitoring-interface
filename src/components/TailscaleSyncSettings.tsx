@@ -351,13 +351,13 @@ const TailscaleSyncSettings: React.FC = () => {
         <div className="form-group">
           <label>
             Device Name
-            <span className="help-text">Run <code>tailscale status</code> on your PC to get this</span>
+            <span className="help-text">Run <code>tailscale status</code> on your PC, or use Tailscale IP address (e.g., 100.111.83.23)</span>
           </label>
           <input
             type="text"
             value={settings.deviceName}
             onChange={(e) => handleChange('deviceName', e.target.value)}
-            placeholder="DESKTOP-ABC123"
+            placeholder="petrogas-ccr-pc or 100.111.83.23"
           />
         </div>
 

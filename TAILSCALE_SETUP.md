@@ -81,7 +81,7 @@ Add these secrets:
 | Secret Name | Value | Example |
 |------------|-------|---------|
 | `TAILSCALE_AUTHKEY` | Auth key from Step 2 | `tskey-auth-...` |
-| `TAILSCALE_DEVICE_NAME` | Your PC's device name (short or full Tailscale name) | `DESKTOP-ABC123` or `DESKTOP-ABC123.tailnet-abc.ts.net` |
+| `TAILSCALE_DEVICE_NAME` | Your PC's device name or Tailscale IP | `petrogas-ccr-pc` or `100.111.83.23` |
 | `SHARE_NAME` | SMB share name from Step 3 | `BoilerData` |
 | `SHARE_USERNAME` | Your Windows username (leave empty for guest access) | `YourName` or empty |
 | `SHARE_PASSWORD` | Your Windows password (leave empty for guest access) | `YourPassword` or empty |
