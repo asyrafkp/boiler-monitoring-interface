@@ -181,45 +181,25 @@ jobs:
           # Delete old files to ensure fresh download
           rm -f data/boiler_data.xlsx
           
-          # Try to access locked file via Windows Shadow Copy (Previous Versions)
+          # Download unlocked copy file from SMB share
           echo ""
           echo "========================================="
-          echo "Accessing locked Excel via Shadow Copy..."
+          echo "Downloading Excel copy from SMB share..."
           echo "========================================="
           
           DEVICE_NAME="${{ env.TAILSCALE_DEVICE }}"
           SHARE_NAME="${{ env.SHARE_NAME }}"
-          ORIGINAL_FILE="${{ env.ORIGINAL_FILE }}"
+          FILE_NAME="${{ env.FILE_NAME }}"
           
-          # Convert path for SMB
-          SMB_PATH=$(echo "$ORIGINAL_FILE" | sed 's/\//\\/g')
-          
-          echo "File: $ORIGINAL_FILE"
-          echo "SMB path: $SMB_PATH"
-          
-          # First, list available shadow copies
+          echo "Downloading: $FILE_NAME"
           echo ""
-          echo "Checking for shadow copies..."
+          
+          # Download the copy file
           if [ "$USE_GUEST" = true ]; then
-            SHADOWS=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "allinfo \"$SMB_PATH\"" 2>&1 | grep -i "previous versions" || echo "")
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$FILE_NAME\" data/boiler_data.xlsx" 2>&1 | tee /tmp/smb_output.txt
           else
-            SHADOWS=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "allinfo \"$SMB_PATH\"" 2>&1 | grep -i "previous versions" || echo "")
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"$FILE_NAME\" data/boiler_data.xlsx" 2>&1 | tee /tmp/smb_output.txt
           fi
-          
-          # Try to get the file from most recent shadow copy
-          # Shadow copy format: @GMT-YYYY.MM.DD-HH.MM.SS
-          echo "Attempting to download from shadow copy..."
-          
-          # Try with nobrl (no byte range locking) option
-          if [ "$USE_GUEST" = true ]; then
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N --option='client use spnego=no' --option='client ntlmv2 auth=yes' -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1 | tee /tmp/smb_output.txt
-          else
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" --option='client use spnego=no' --option='client ntlmv2 auth=yes' -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1 | tee /tmp/smb_output.txt
-          fi
-          
-          echo "Source: $ORIGINAL_FILE"
-          echo "SMB path: $SMB_PATH"
-          echo ""
           
           # Download the file (read-only access works even if locked)
           echo "Downloading..."
