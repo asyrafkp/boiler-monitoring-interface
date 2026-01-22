@@ -1,7 +1,7 @@
 {
   "boilerId": 3,
   "boilerName": "Boiler No. 3",
-  "lastUpdate": "2026-01-22T07:58:37.177Z",
+  "lastUpdate": "2026-01-22T08:53:12.839Z",
   "dailyData": [
     {
       "date": "1/1/2026",
@@ -75,22 +75,32 @@
     },
     {
       "date": "1/21/2026",
-      "steam": 41,
-      "water": 36,
-      "waterPerTonneSteam": 0.8780487804878049,
-      "naturalGas": 1857,
-      "ngPerTonneSteam": 45.292682926829265,
-      "electric": 0.1249000000000001,
+      "steam": 165,
+      "water": 150,
+      "waterPerTonneSteam": 0.9090909090909091,
+      "naturalGas": 7777,
+      "ngPerTonneSteam": 47.13333333333333,
+      "electric": 0.7135800000000004,
+      "wasteGas": 0
+    },
+    {
+      "date": "1/22/2026",
+      "steam": 95,
+      "water": 90,
+      "waterPerTonneSteam": 0.9473684210526315,
+      "naturalGas": 4702,
+      "ngPerTonneSteam": 49.49473684210526,
+      "electric": 0.3675199999999995,
       "wasteGas": 0
     },
     {
       "date": "TOTAL",
-      "steam": 1314,
-      "water": 1177,
-      "waterPerTonneSteam": 0.895738203957382,
-      "naturalGas": 63507,
-      "ngPerTonneSteam": 48.3310502283105,
-      "electric": 5.98415,
+      "steam": 1533,
+      "water": 1381,
+      "waterPerTonneSteam": 0.9008480104370515,
+      "naturalGas": 74129,
+      "ngPerTonneSteam": 48.355512067840834,
+      "electric": 6.94035,
       "wasteGas": 0
     }
   ]
