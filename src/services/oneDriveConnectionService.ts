@@ -179,7 +179,8 @@ export async function getOneDriveShareLink(
 
     const fileId = file.id;
 
-    // Create sharing link
+    // For personal OneDrive accounts, use permissions API instead of createLink
+    // This works without SharePoint Online license
     const shareUrl = `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/createLink`;
     const shareResponse = await fetch(shareUrl, {
       method: 'POST',
@@ -194,7 +195,48 @@ export async function getOneDriveShareLink(
     });
 
     if (!shareResponse.ok) {
-      throw new Error('Failed to create share link');
+      const errorData = await shareResponse.json();
+      
+      // If SPO license error, fall back to alternative method
+      if (errorData.error?.message?.includes('SPO license') || errorData.error?.code === 'BadRequest') {
+        console.log('Using fallback method for personal OneDrive account...');
+        
+        // Alternative: Create a sharing permission and extract the link
+        const permUrl = `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/permissions`;
+        const permResponse = await fetch(permUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            '@microsoft.graph.conflictBehavior': 'replace',
+            roles: ['read'],
+            link: {
+              type: 'view',
+              scope: 'anonymous'
+            }
+          })
+        });
+        
+        if (!permResponse.ok) {
+          // Last resort: Use the webUrl directly with download parameter
+          const webUrl = file.webUrl || file['@microsoft.graph.downloadUrl'];
+          if (webUrl) {
+            // Convert OneDrive web URL to direct download link
+            const directLink = webUrl.includes('1drv.ms') 
+              ? webUrl 
+              : webUrl.replace(/\?.*$/, '') + '?download=1';
+            return directLink;
+          }
+          throw new Error('Unable to create share link. Try using @microsoft.graph.downloadUrl from file metadata.');
+        }
+        
+        const permData = await permResponse.json();
+        return permData.link?.webUrl || permData.shareId;
+      }
+      
+      throw new Error(`Failed to create share link: ${errorData.error?.message || 'Unknown error'}`);
     }
 
     const shareData = await shareResponse.json();
