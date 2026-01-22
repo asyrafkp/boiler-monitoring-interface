@@ -44,16 +44,39 @@ export async function authenticateOneDrive(config: OneDriveAuthConfig): Promise<
       return;
     }
 
-    // Listen for redirect
+    // Listen for messages from the popup
+    const messageHandler = (event: MessageEvent) => {
+      // Verify origin for security
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+
+      if (event.data.type === 'auth-success' && event.data.accessToken) {
+        window.removeEventListener('message', messageHandler);
+        popup.close();
+        clearInterval(checkPopup);
+        resolve(event.data.accessToken);
+      } else if (event.data.type === 'auth-error') {
+        window.removeEventListener('message', messageHandler);
+        popup.close();
+        clearInterval(checkPopup);
+        reject(new Error(event.data.error || 'Authentication failed'));
+      }
+    };
+
+    window.addEventListener('message', messageHandler);
+
+    // Fallback: Check if popup has navigated to redirect URI (for older browsers)
     const checkPopup = setInterval(() => {
       try {
         if (popup.closed) {
           clearInterval(checkPopup);
+          window.removeEventListener('message', messageHandler);
           reject(new Error('Authentication cancelled'));
           return;
         }
 
-        // Check if popup has navigated to redirect URI
+        // Try to read popup URL (will fail if cross-origin)
         if (popup.location.href.includes(config.redirectUri)) {
           const hash = popup.location.hash;
           const params = new URLSearchParams(hash.substring(1));
@@ -62,22 +85,25 @@ export async function authenticateOneDrive(config: OneDriveAuthConfig): Promise<
           if (accessToken) {
             popup.close();
             clearInterval(checkPopup);
+            window.removeEventListener('message', messageHandler);
             resolve(accessToken);
           } else {
             const error = params.get('error_description') || 'Authentication failed';
             popup.close();
             clearInterval(checkPopup);
+            window.removeEventListener('message', messageHandler);
             reject(new Error(error));
           }
         }
       } catch (e) {
-        // Cross-origin error - popup hasn't redirected yet
+        // Cross-origin error - popup hasn't redirected yet or messageHandler will handle it
       }
     }, 500);
 
     // Timeout after 5 minutes
     setTimeout(() => {
       clearInterval(checkPopup);
+      window.removeEventListener('message', messageHandler);
       if (!popup.closed) {
         popup.close();
       }

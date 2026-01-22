@@ -68,7 +68,7 @@ export const OneDriveConnection: React.FC = () => {
         {
           clientId: config.clientId,
           tenantId: config.tenantId,
-          redirectUri: window.location.origin + '/auth-callback'
+          redirectUri: window.location.origin + '/auth-callback.html'
         },
         {
           owner: config.githubOwner,
