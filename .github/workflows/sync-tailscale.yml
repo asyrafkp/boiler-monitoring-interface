@@ -38,11 +38,29 @@ jobs:
           FILE_NAME: ${{ secrets.FILE_NAME }}
         run: |
           # Validate required secrets
-          if [ -z "$DEVICE_NAME" ] || [ -z "$SHARE_NAME" ] || [ -z "$SHARE_USERNAME" ] || [ -z "$SHARE_PASSWORD" ] || [ -z "$FILE_NAME" ]; then
-            echo "Error: Missing required secrets. Please check GitHub Secrets configuration."
-            echo "Required: TAILSCALE_DEVICE_NAME, SHARE_NAME, SHARE_USERNAME, SHARE_PASSWORD, FILE_NAME"
+          echo "Checking required secrets..."
+          MISSING=""
+          [ -z "$DEVICE_NAME" ] && MISSING="$MISSING TAILSCALE_DEVICE_NAME"
+          [ -z "$SHARE_NAME" ] && MISSING="$MISSING SHARE_NAME"
+          [ -z "$SHARE_USERNAME" ] && MISSING="$MISSING SHARE_USERNAME"
+          [ -z "$SHARE_PASSWORD" ] && MISSING="$MISSING SHARE_PASSWORD"
+          [ -z "$FILE_NAME" ] && MISSING="$MISSING FILE_NAME"
+          
+          if [ -n "$MISSING" ]; then
+            echo "❌ Error: Missing required secrets:$MISSING"
+            echo ""
+            echo "Please add these at: https://github.com/${{ github.repository }}/settings/secrets/actions"
+            echo ""
+            echo "Expected values:"
+            echo "  TAILSCALE_DEVICE_NAME = Your PC name from 'tailscale status' (e.g., DESKTOP-ABC123)"
+            echo "  SHARE_NAME = Your SMB share name (e.g., BoilerData)"
+            echo "  SHARE_USERNAME = Your Windows username"
+            echo "  SHARE_PASSWORD = Your Windows password"
+            echo "  FILE_NAME = Excel filename (e.g., REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx)"
             exit 1
           fi
+          
+          echo "✅ All required secrets are configured"
           
           # Create mount point
           sudo mkdir -p /mnt/tailscale_share
