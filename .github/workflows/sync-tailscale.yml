@@ -179,24 +179,45 @@ jobs:
           # Delete old files to ensure fresh download
           rm -f data/boiler_data.xlsx
           
-          # Download unlocked copy file from SMB share
+          # Try to download original locked Excel file directly
           echo ""
           echo "========================================="
-          echo "Downloading Excel copy from SMB share..."
+          echo "Downloading Excel from SMB share..."
           echo "========================================="
           
           DEVICE_NAME="${{ env.TAILSCALE_DEVICE }}"
           SHARE_NAME="${{ env.SHARE_NAME }}"
-          FILE_NAME="${{ env.FILE_NAME }}"
+          ORIGINAL_FILE="${{ env.ORIGINAL_FILE }}"
           
-          echo "Downloading: $FILE_NAME"
+          # Convert path for SMB
+          SMB_PATH=$(echo "$ORIGINAL_FILE" | sed 's/\//\\/g')
+          
+          echo "Attempting to download locked file: $ORIGINAL_FILE"
+          echo "SMB path: $SMB_PATH"
           echo ""
           
-          # Download the copy file
+          # Try downloading with read-only flags to bypass lock
           if [ "$USE_GUEST" = true ]; then
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$FILE_NAME\" data/boiler_data.xlsx" 2>&1 | tee /tmp/smb_output.txt
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N --option='client ipc signing=auto' -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1 | tee /tmp/smb_output.txt
           else
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"$FILE_NAME\" data/boiler_data.xlsx" 2>&1 | tee /tmp/smb_output.txt
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" --option='client ipc signing=auto' -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1 | tee /tmp/smb_output.txt
+          fi
+          
+          # Check if download succeeded
+          if [ ! -f "data/boiler_data.xlsx" ]; then
+            echo ""
+            echo "⚠️  Locked file download failed (expected)"
+            echo "Falling back to copy file: ${{ env.FILE_NAME }}"
+            echo ""
+            
+            # Fall back to the copy file
+            if [ "$USE_GUEST" = true ]; then
+              smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"${{ env.FILE_NAME }}\" data/boiler_data.xlsx" 2>&1 | tee /tmp/smb_fallback.txt
+            else
+              smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"${{ env.FILE_NAME }}\" data/boiler_data.xlsx" 2>&1 | tee /tmp/smb_fallback.txt
+            fi
+          else
+            echo "✅ Successfully downloaded locked file!"
           fi
           
           # Download the file (read-only access works even if locked)
