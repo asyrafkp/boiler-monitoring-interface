@@ -175,6 +175,9 @@ jobs:
             smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "allinfo \"$FILE_NAME\"" 2>&1 | head -5
           fi
           
+          # Delete old Excel file to ensure fresh download
+          rm -f data/boiler_data.xlsx
+          
           # Check file modification time first
           echo ""
           echo "Checking file information from SMB share..."
@@ -259,7 +262,7 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          git add public/boiler_*.json
+          git add data/boiler_data.xlsx public/boiler_*.json
           git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update from Tailscale: $(date +'%Y-%m-%d %H:%M:%S')" && git push)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
