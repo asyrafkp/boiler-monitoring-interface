@@ -87,6 +87,29 @@ jobs:
           
           echo "✅ All required secrets are configured"
           
+          # Wait for Tailscale network to be ready
+          echo "🔄 Waiting for Tailscale network to stabilize..."
+          sleep 5
+          
+          # Test if device is reachable
+          echo "🔍 Testing connectivity to device: $DEVICE_NAME"
+          if ! tailscale ping "$DEVICE_NAME" -c 1 --timeout=10s; then
+            echo ""
+            echo "❌ Error: Cannot reach device '$DEVICE_NAME'"
+            echo ""
+            echo "Troubleshooting steps:"
+            echo "1. Check if your PC is online and Tailscale is running"
+            echo "2. On your PC, run: tailscale status"
+            echo "3. Find your device name (e.g., DESKTOP-ABC123)"
+            echo "4. Update TAILSCALE_DEVICE_NAME secret with the correct name"
+            echo ""
+            echo "Available devices in this Tailscale network:"
+            tailscale status || true
+            exit 1
+          fi
+          
+          echo "✅ Device is reachable"
+          
           # Create mount point
           sudo mkdir -p /mnt/tailscale_share
           
