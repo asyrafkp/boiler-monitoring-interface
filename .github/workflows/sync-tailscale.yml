@@ -237,6 +237,9 @@ jobs:
             exit 1
           fi
 
+      - name: Install dependencies
+        run: npm install xlsx
+
       - name: Convert Excel to JSON
         run: |
           node .github/scripts/excel_to_json.js
