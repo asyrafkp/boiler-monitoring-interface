@@ -205,7 +205,25 @@ jobs:
             exit 1
           fi
           
+          # List share contents to verify path
+          echo ""
+          echo "📂 Listing share contents:"
+          echo "Root of share:"
+          ls -la /mnt/tailscale_share/ || echo "Cannot list root"
+          echo ""
+          echo "Looking for 'Production Latest' folder:"
+          ls -la /mnt/tailscale_share/ | grep -i production || echo "Not found in root"
+          echo ""
+          
+          # If Production Latest exists, show its contents
+          if [ -d "/mnt/tailscale_share/Production Latest" ]; then
+            echo "Contents of 'Production Latest':"
+            ls -la "/mnt/tailscale_share/Production Latest/" | head -20
+          fi
+          echo ""
+          
           # Copy Excel file
+          echo "Attempting to copy: $FILE_NAME"
           cp "/mnt/tailscale_share/$FILE_NAME" data/boiler_data.xlsx
           
           # Unmount
