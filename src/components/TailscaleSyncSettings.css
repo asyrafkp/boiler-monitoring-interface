@@ -159,6 +159,12 @@ button:disabled {
 
 .settings-section button {
   margin-top: 10px;
+  background: #17a2b8;
+  color: white;
+}
+
+.settings-section button:hover:not(:disabled) {
+  background: #138496;
 }
 
 .info-box {

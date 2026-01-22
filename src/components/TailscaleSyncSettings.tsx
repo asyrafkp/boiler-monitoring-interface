@@ -171,7 +171,7 @@ const TailscaleSyncSettings: React.FC = () => {
 
   const testConnection = async () => {
     setLoading(true);
-    setMessage({ type: 'info', text: 'Testing connection...' });
+    setMessage({ type: 'info', text: 'Testing GitHub connection...' });
 
     try {
       const response = await fetch(`https://api.github.com/repos/${repo}/actions/workflows`, {
@@ -188,6 +188,85 @@ const TailscaleSyncSettings: React.FC = () => {
       }
     } catch (error) {
       setMessage({ type: 'error', text: `Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}` });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const testTailscaleSettings = async () => {
+    if (!settings.authKey || !settings.deviceName) {
+      setMessage({ type: 'error', text: 'Please fill in Tailscale Auth Key and Device Name first' });
+      return;
+    }
+
+    setLoading(true);
+    setMessage({ type: 'info', text: 'Testing Tailscale settings...' });
+
+    try {
+      // Check auth key format
+      if (!settings.authKey.startsWith('tskey-auth-')) {
+        throw new Error('Invalid auth key format. Should start with: tskey-auth-');
+      }
+
+      // Validate device name format
+      if (settings.deviceName.length === 0) {
+        throw new Error('Device name cannot be empty');
+      }
+
+      setMessage({ 
+        type: 'success', 
+        text: `✅ Tailscale settings look valid! Auth key format: OK, Device name: ${settings.deviceName}`
+      });
+    } catch (error) {
+      setMessage({ type: 'error', text: `${error instanceof Error ? error.message : 'Unknown error'}` });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const testSMBSettings = async () => {
+    if (!settings.shareName || !settings.fileName) {
+      setMessage({ type: 'error', text: 'Please fill in Share Name and File Name first' });
+      return;
+    }
+
+    setLoading(true);
+    setMessage({ type: 'info', text: 'Validating SMB share settings...' });
+
+    try {
+      // Basic validation
+      const warnings = [];
+      
+      if (settings.shareName.includes('\\') || settings.shareName.includes('/')) {
+        warnings.push('Share name should not contain slashes');
+      }
+
+      if (!settings.fileName.toLowerCase().endsWith('.xlsx') && !settings.fileName.toLowerCase().endsWith('.xls')) {
+        warnings.push('File name should be an Excel file (.xlsx or .xls)');
+      }
+
+      if (settings.shareUsername && !settings.sharePassword) {
+        warnings.push('Username provided but password is empty');
+      }
+
+      if (!settings.shareUsername && settings.sharePassword) {
+        warnings.push('Password provided but username is empty');
+      }
+
+      if (warnings.length > 0) {
+        setMessage({ 
+          type: 'error', 
+          text: `⚠️ Validation warnings:\n${warnings.join('\n')}`
+        });
+      } else {
+        const authType = settings.shareUsername && settings.sharePassword ? 'with credentials' : 'as guest';
+        setMessage({ 
+          type: 'success', 
+          text: `✅ SMB settings look valid! Share: \\\\${settings.deviceName}\\${settings.shareName}\\${settings.fileName} (${authType})`
+        });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: `${error instanceof Error ? error.message : 'Unknown error'}` });
     } finally {
       setLoading(false);
     }
@@ -277,6 +356,10 @@ const TailscaleSyncSettings: React.FC = () => {
             placeholder="DESKTOP-ABC123"
           />
         </div>
+
+        <button onClick={testTailscaleSettings} disabled={loading || !settings.authKey || !settings.deviceName}>
+          🧪 Test Tailscale Settings
+        </button>
       </div>
 
       <div className="settings-section">
@@ -333,6 +416,10 @@ const TailscaleSyncSettings: React.FC = () => {
               type="checkbox"
               checked={showPasswords}
               onChange={(e) => setShowPasswords(e.target.checked)}
+
+        <button onClick={testSMBSettings} disabled={loading || !settings.shareName || !settings.fileName}>
+          🧪 Test SMB Settings
+        </button>
             />
             Show passwords
           </label>
@@ -341,11 +428,20 @@ const TailscaleSyncSettings: React.FC = () => {
 
       <div className="actions">
         <button onClick={saveLocally} className="btn-secondary">
-          💾 Save Locally
+          💾 Save Locally (Auto-saved)
         </button>
         <button onClick={updateGitHubSecrets} disabled={loading} className="btn-primary">
           {loading ? '⏳ Updating...' : '🚀 Update GitHub Secrets'}
         </button>
+      </div>
+
+      <div className="info-box" style={{ marginBottom: '20px', background: '#e7f3ff', borderColor: '#0066cc' }}>
+        <h4>ℹ️ Auto-Save Enabled</h4>
+        <p>
+          Your settings are automatically saved to your browser as you type. 
+          They will persist even after you close the page or refresh.
+          Click "Update GitHub Secrets" when you're ready to sync them to your repository.
+        </p>
       </div>
 
       <div className="info-box">
