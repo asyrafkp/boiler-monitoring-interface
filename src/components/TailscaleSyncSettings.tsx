@@ -416,14 +416,14 @@ const TailscaleSyncSettings: React.FC = () => {
               type="checkbox"
               checked={showPasswords}
               onChange={(e) => setShowPasswords(e.target.checked)}
-
-        <button onClick={testSMBSettings} disabled={loading || !settings.shareName || !settings.fileName}>
-          🧪 Test SMB Settings
-        </button>
             />
             Show passwords
           </label>
         </div>
+
+        <button onClick={testSMBSettings} disabled={loading || !settings.shareName || !settings.fileName}>
+          🧪 Test SMB Settings
+        </button>
       </div>
 
       <div className="actions">
