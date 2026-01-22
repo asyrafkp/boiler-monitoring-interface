@@ -120,27 +120,61 @@ export async function getOneDriveShareLink(
   fileName: string
 ): Promise<string> {
   try {
-    // Search for file anywhere in OneDrive using search API
-    const searchUrl = `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(fileName)}')`;
-    const searchResponse = await fetch(searchUrl, {
+    // Try multiple search strategies
+    let file: any = null;
+    let searchUrl: string;
+    
+    // Strategy 1: Search with simplified query (without special characters encoding issues)
+    const simpleSearchQuery = fileName.replace(/[^\w\s.]/g, ' ').trim();
+    searchUrl = `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(simpleSearchQuery)}')`;
+    
+    let searchResponse = await fetch(searchUrl, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       }
     });
 
-    if (!searchResponse.ok) {
-      throw new Error(`Search failed for file: ${fileName}`);
-    }
-
-    const searchData = await searchResponse.json();
-    const files = searchData.value || [];
+    let searchData: any = { value: [] };
     
-    // Find exact match
-    const file = files.find((f: any) => f.name === fileName);
+    if (searchResponse.ok) {
+      searchData = await searchResponse.json();
+      const files = searchData.value || [];
+      // Find exact match (case-insensitive)
+      file = files.find((f: any) => f.name.toLowerCase() === fileName.toLowerCase());
+    }
+    
+    // Strategy 2: If not found, try listing root folder
+    if (!file) {
+      const listUrl = 'https://graph.microsoft.com/v1.0/me/drive/root/children?$top=1000';
+      const listResponse = await fetch(listUrl, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (listResponse.ok) {
+        const listData = await listResponse.json();
+        const allFiles = listData.value || [];
+        // Find exact match (case-insensitive)
+        file = allFiles.find((f: any) => f.name.toLowerCase() === fileName.toLowerCase());
+        
+        if (!file) {
+          // List all Excel files for debugging
+          const excelFiles = allFiles.filter((f: any) => f.name.match(/\.xlsx?$/i));
+          const fileList = excelFiles.map((f: any) => f.name).join('\n  - ');
+          throw new Error(
+            `File not found: ${fileName}\n\n` +
+            `Found ${excelFiles.length} Excel files in your OneDrive root:\n  - ${fileList}\n\n` +
+            `Make sure the filename exactly matches (including spaces and case).`
+          );
+        }
+      }
+    }
     
     if (!file) {
-      throw new Error(`File not found: ${fileName}. Found ${files.length} similar files. Make sure the filename is exactly correct.`);
+      throw new Error(`File not found: ${fileName}\n\nSearch URL: ${searchUrl}`);
     }
 
     const fileId = file.id;
