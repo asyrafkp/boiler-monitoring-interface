@@ -1,210 +1,133 @@
 import React, { useState } from 'react';
-import { refreshOneDriveConnection } from '../services/oneDriveConnectionService';
 
 export const OneDriveConnection: React.FC = () => {
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info' | null; message: string }>({
     type: null,
     message: ''
   });
   const [config, setConfig] = useState({
-    // Azure App Configuration
-    clientId: localStorage.getItem('azure_client_id') || '',
-    tenantId: localStorage.getItem('azure_tenant_id') || '',
-    
-    // GitHub Configuration
     githubOwner: localStorage.getItem('github_owner') || '',
     githubRepo: localStorage.getItem('github_repo') || '',
-    githubToken: localStorage.getItem('github_token') || '',
-    
-    // OneDrive File
-    fileName: localStorage.getItem('onedrive_filename') || 'REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx',
-    folderPath: localStorage.getItem('onedrive_folder_path') || ''
+    fileName: localStorage.getItem('onedrive_filename') || 'REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx'
   });
 
   const saveConfig = () => {
-    localStorage.setItem('azure_client_id', config.clientId);
-    localStorage.setItem('azure_tenant_id', config.tenantId);
     localStorage.setItem('github_owner', config.githubOwner);
     localStorage.setItem('github_repo', config.githubRepo);
-    localStorage.setItem('github_token', config.githubToken);
     localStorage.setItem('onedrive_filename', config.fileName);
-    localStorage.setItem('onedrive_folder_path', config.folderPath);
     setStatus({ type: 'success', message: 'Configuration saved!' });
     setTimeout(() => setStatus({ type: null, message: '' }), 3000);
   };
 
-  const handleRefresh = async () => {
-    // Validate GUIDs format
-    const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    
-    if (!config.clientId || !guidPattern.test(config.clientId)) {
-      setStatus({
-        type: 'error',
-        message: '❌ Invalid Client ID format. Must be a GUID like: 48b047d9-d5d9-492d-9bb3-bb1fa3b05efd\n\nFind it in Azure Portal → Your App → Overview → Application (client) ID'
-      });
-      return;
-    }
-    
-    if (!config.tenantId || !guidPattern.test(config.tenantId)) {
-      setStatus({
-        type: 'error',
-        message: '❌ Invalid Tenant ID format. Must be a GUID like: eee3095b-dd9b-4e16-90b7-8b3baca8da81\n\nFind it in Azure Portal → Your App → Overview → Directory (tenant) ID'
-      });
-      return;
-    }
-    
-    if (!config.githubOwner || !config.githubRepo || !config.githubToken) {
-      setStatus({
-        type: 'error',
-        message: 'Please fill in all configuration fields first'
-      });
-      return;
-    }
-
-    setIsRefreshing(true);
-    setStatus({ type: 'info', message: '🔄 Authenticating with Microsoft...' });
-
-    try {
-      const result = await refreshOneDriveConnection(
-        {
-          clientId: config.clientId,
-          tenantId: config.tenantId,
-          redirectUri: window.location.origin + '/auth-callback.html'
-        },
-        {
-          owner: config.githubOwner,
-          repo: config.githubRepo,
-          token: config.githubToken
-        },
-        config.fileName,
-        config.folderPath
-      );
-
-      setStatus({
-        type: 'success',
-        message: `✅ ${result.message}\n\nNew share link: ${result.shareLink.substring(0, 50)}...`
-      });
-    } catch (error) {
-      setStatus({
-        type: 'error',
-        message: `❌ ${error instanceof Error ? error.message : 'Unknown error'}`
-      });
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
   return (
     <div className="onedrive-connection">
-      <h3>🔗 OneDrive Connection</h3>
-      <p className="section-description">
-        Automatically refresh your OneDrive share link and update GitHub secrets with one click.
-      </p>
-
-      <div className="config-sections">
-        {/* Azure Configuration */}
-        <div className="config-section">
-          <h4>☁️ Azure Configuration</h4>
-          <div className="form-group">
-            <label>Client ID</label>
-            <input
-              type="text"
-              placeholder="e.g., 48b047d9-d5d9-492d-9bb3-bb1fa3b05efd"
-              value={config.clientId}
-              onChange={(e) => setConfig({ ...config, clientId: e.target.value })}
-            />
-            <small>From Azure Portal → Your App → Overview → Application (client) ID</small>
-          </div>
-          <div className="form-group">
-            <label>Tenant ID</label>
-            <input
-              type="text"
-              placeholder="e.g., eee3095b-dd9b-4e16-90b7-8b3baca8da81"
-              value={config.tenantId}
-              onChange={(e) => setConfig({ ...config, tenantId: e.target.value })}
-            />
-            <small>From Azure Portal → Your App → Overview → Directory (tenant) ID</small>
-          </div>
-        </div>
-
-        {/* GitHub Configuration */}
-        <div className="config-section">
-          <h4>🐙 GitHub Configuration</h4>
-          <div className="form-group">
-            <label>Repository Owner</label>
-            <input
-              type="text"
-              placeholder="e.g., username"
-              value={config.githubOwner}
-              onChange={(e) => setConfig({ ...config, githubOwner: e.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Repository Name</label>
-            <input
-              type="text"
-              placeholder="e.g., boiler-monitoring-interface"
-              value={config.githubRepo}
-              onChange={(e) => setConfig({ ...config, githubRepo: e.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Personal Access Token</label>
-            <input
-              type="password"
-              placeholder="GitHub PAT with repo and secrets scope"
-              value={config.githubToken}
-              onChange={(e) => setConfig({ ...config, githubToken: e.target.value })}
-            />
-            <small>
-              Create at: <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer">
-                GitHub Settings → Tokens
-              </a> (Requires: repo, admin:repo_hook scopes)
-            </small>
-          </div>
-        </div>
-
-        {/* OneDrive File */}
-        <div className="config-section">
-          <h4>📁 OneDrive File</h4>
-          <div className="form-group">
-            <label>Excel Filename</label>
-            <input
-              type="text"
-              placeholder="e.g., REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx"
-              value={config.fileName}
-              onChange={(e) => setConfig({ ...config, fileName: e.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <label>Folder Path (Optional - Faster!)</label>
-            <input
-              type="text"
-              placeholder="e.g., Documents/Boiler Reports or leave empty for root"
-              value={config.folderPath}
-              onChange={(e) => setConfig({ ...config, folderPath: e.target.value })}
-            />
-            <small>💡 Providing folder path avoids SPO license requirement and is much faster!</small>
-          </div>
-        </div>
+      <h3>🔗 OneDrive Link Management</h3>
+      
+      <div className="info-box" style={{ backgroundColor: '#fff3cd', borderColor: '#ffc107', marginBottom: '20px' }}>
+        <strong>⚠️ Personal OneDrive Limitation:</strong>
+        <p style={{ marginTop: '8px', marginBottom: '8px' }}>
+          Personal Microsoft accounts require <strong>SharePoint Online (SPO) license</strong> for automatic share link creation via API.
+          Unfortunately, this means the one-click refresh feature won't work with personal OneDrive accounts.
+        </p>
+        <p style={{ marginBottom: '0' }}>
+          <strong>Don't worry!</strong> Manual link refresh is quick and only needed every few months.
+        </p>
       </div>
 
-      <div className="action-buttons">
-        <button
-          className="btn btn-secondary"
-          onClick={saveConfig}
-          disabled={isRefreshing}
-        >
-          💾 Save Configuration
-        </button>
-        <button
-          className="btn btn-primary"
-          onClick={handleRefresh}
-          disabled={isRefreshing || !config.clientId || !config.githubToken}
-        >
-          {isRefreshing ? '🔄 Refreshing...' : '🔄 Refresh OneDrive Link'}
-        </button>
+      <div className="config-section">
+        <h4>📝 Quick Manual Refresh Guide</h4>
+        
+        <div className="form-group">
+          <label>Your Excel File</label>
+          <input
+            type="text"
+            placeholder="e.g., REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx"
+            value={config.fileName}
+            onChange={(e) => setConfig({ ...config, fileName: e.target.value })}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>GitHub Repository</label>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <input
+              type="text"
+              placeholder="owner"
+              value={config.githubOwner}
+              onChange={(e) => setConfig({ ...config, githubOwner: e.target.value })}
+              style={{ flex: 1 }}
+            />
+            <input
+              type="text"
+              placeholder="repo"
+              value={config.githubRepo}
+              onChange={(e) => setConfig({ ...config, githubRepo: e.target.value })}
+              style={{ flex: 1 }}
+            />
+          </div>
+          <button
+            className="btn btn-secondary"
+            onClick={saveConfig}
+            style={{ marginTop: '10px' }}
+          >
+            💾 Save Configuration
+          </button>
+        </div>
+
+        <div style={{ backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px', marginTop: '20px' }}>
+          <h5 style={{ marginTop: 0, marginBottom: '15px' }}>📋 Step-by-Step Instructions:</h5>
+          
+          <ol style={{ lineHeight: '1.8', paddingLeft: '20px' }}>
+            <li>
+              <strong>Go to OneDrive:</strong>{' '}
+              <a href="https://onedrive.live.com" target="_blank" rel="noopener noreferrer" style={{ color: '#0066cc' }}>
+                Open OneDrive →
+              </a>
+            </li>
+            <li>
+              <strong>Find your file:</strong> {config.fileName || 'your Excel file'}
+            </li>
+            <li>
+              <strong>Right-click</strong> the file → <strong>Share</strong>
+            </li>
+            <li>
+              Select: <strong>"Anyone with the link can view"</strong>
+            </li>
+            <li>
+              Click <strong>Copy link</strong>
+            </li>
+            <li>
+              <strong>Go to GitHub Secrets:</strong>{' '}
+              {config.githubOwner && config.githubRepo ? (
+                <a 
+                  href={`https://github.com/${config.githubOwner}/${config.githubRepo}/settings/secrets/actions`}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ color: '#0066cc' }}
+                >
+                  Open GitHub Secrets →
+                </a>
+              ) : (
+                <span style={{ color: '#6c757d' }}>(Configure GitHub repo above first)</span>
+              )}
+            </li>
+            <li>
+              Find <code style={{ backgroundColor: '#e9ecef', padding: '2px 6px', borderRadius: '3px' }}>ONEDRIVE_LINK</code> secret
+            </li>
+            <li>
+              Click <strong>Update</strong> → Paste your OneDrive link → <strong>Update secret</strong>
+            </li>
+          </ol>
+
+          <div style={{ backgroundColor: '#d4edda', padding: '15px', borderRadius: '6px', marginTop: '20px', borderLeft: '4px solid #28a745' }}>
+            <strong>✅ Done!</strong> Your hourly sync will now use the fresh link. 
+            This link typically lasts <strong>several months</strong> before expiring.
+          </div>
+          
+          <div style={{ backgroundColor: '#e7f3ff', padding: '15px', borderRadius: '6px', marginTop: '15px', borderLeft: '4px solid #0066cc' }}>
+            <strong>💡 Pro Tip:</strong> Bookmark the GitHub Secrets page for quick access next time!
+          </div>
+        </div>
       </div>
 
       {status.type && (
@@ -212,18 +135,6 @@ export const OneDriveConnection: React.FC = () => {
           {status.message}
         </div>
       )}
-
-      <div className="info-box">
-        <h4>ℹ️ How It Works</h4>
-        <ol>
-          <li>Click "Refresh OneDrive Link" button</li>
-          <li>Sign in with your Microsoft account (popup)</li>
-          <li>Script gets a fresh share link from OneDrive</li>
-          <li>Automatically updates GitHub secret ONEDRIVE_LINK</li>
-          <li>Next hourly sync uses the new link</li>
-        </ol>
-        <p><strong>No more manual secret updates!</strong></p>
-      </div>
     </div>
   );
 };
