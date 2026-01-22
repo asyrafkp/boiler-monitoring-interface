@@ -158,12 +158,27 @@ jobs:
             fi
             chmod 600 /tmp/smb_creds
             
-            # Mount with credentials (handle spaces in share name)
-            sudo mount -t cifs "//${DEVICE_NAME}/${SHARE_NAME}" /mnt/tailscale_share \
-              -o "credentials=/tmp/smb_creds,vers=3.0,uid=$(id -u),gid=$(id -g)"
+            # Try mounting with different SMB versions (3.0, then 2.1, then 2.0)
+            MOUNT_SUCCESS=false
+            for VERSION in "3.0" "2.1" "2.0"; do
+              echo "Trying SMB version $VERSION..."
+              if sudo mount -t cifs "//${DEVICE_NAME}/${SHARE_NAME}" /mnt/tailscale_share \
+                -o "credentials=/tmp/smb_creds,vers=$VERSION,nounix,noserverino,uid=$(id -u),gid=$(id -g)" 2>/dev/null; then
+                echo "✅ Mounted successfully with SMB $VERSION"
+                MOUNT_SUCCESS=true
+                break
+              fi
+            done
             
             # Clean up credentials file
             rm -f /tmp/smb_creds
+            
+            if [ "$MOUNT_SUCCESS" = false ]; then
+              echo "❌ Failed to mount with SMB versions 3.0, 2.1, 2.0"
+              echo "Share: Desktop PC CCR is visible but mount fails"
+              echo "Try checking Windows share permissions"
+              exit 1
+            fi
           else
             echo "🔓 Mounting as guest (no credentials)..."
             # Mount without credentials (guest access)
