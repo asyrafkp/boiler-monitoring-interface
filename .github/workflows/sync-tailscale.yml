@@ -37,18 +37,33 @@ jobs:
           SHARE_PASSWORD: ${{ secrets.SHARE_PASSWORD }}
           FILE_NAME: ${{ secrets.FILE_NAME }}
         run: |
+          # Validate required secrets
+          if [ -z "$DEVICE_NAME" ] || [ -z "$SHARE_NAME" ] || [ -z "$SHARE_USERNAME" ] || [ -z "$SHARE_PASSWORD" ] || [ -z "$FILE_NAME" ]; then
+            echo "Error: Missing required secrets. Please check GitHub Secrets configuration."
+            echo "Required: TAILSCALE_DEVICE_NAME, SHARE_NAME, SHARE_USERNAME, SHARE_PASSWORD, FILE_NAME"
+            exit 1
+          fi
+          
           # Create mount point
           sudo mkdir -p /mnt/tailscale_share
           
+          # Create credentials file for mount (more secure than command line)
+          echo "username=$SHARE_USERNAME" > /tmp/smb_creds
+          echo "password=$SHARE_PASSWORD" >> /tmp/smb_creds
+          chmod 600 /tmp/smb_creds
+          
           # Mount SMB share from Windows PC via Tailscale
           sudo mount -t cifs "//$DEVICE_NAME/$SHARE_NAME" /mnt/tailscale_share \
-            -o username="$SHARE_USERNAME",password="$SHARE_PASSWORD",vers=3.0
+            -o credentials=/tmp/smb_creds,vers=3.0,uid=$(id -u),gid=$(id -g)
           
           # Copy Excel file
           cp "/mnt/tailscale_share/$FILE_NAME" data/boiler_data.xlsx
           
           # Unmount
           sudo umount /mnt/tailscale_share
+          
+          # Clean up credentials file
+          rm -f /tmp/smb_creds
 
       - name: Convert Excel to JSON
         run: |
