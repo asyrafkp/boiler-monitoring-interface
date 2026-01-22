@@ -33,7 +33,26 @@ export const OneDriveConnection: React.FC = () => {
   };
 
   const handleRefresh = async () => {
-    if (!config.clientId || !config.tenantId || !config.githubOwner || !config.githubRepo || !config.githubToken) {
+    // Validate GUIDs format
+    const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    
+    if (!config.clientId || !guidPattern.test(config.clientId)) {
+      setStatus({
+        type: 'error',
+        message: '❌ Invalid Client ID format. Must be a GUID like: 48b047d9-d5d9-492d-9bb3-bb1fa3b05efd\n\nFind it in Azure Portal → Your App → Overview → Application (client) ID'
+      });
+      return;
+    }
+    
+    if (!config.tenantId || !guidPattern.test(config.tenantId)) {
+      setStatus({
+        type: 'error',
+        message: '❌ Invalid Tenant ID format. Must be a GUID like: eee3095b-dd9b-4e16-90b7-8b3baca8da81\n\nFind it in Azure Portal → Your App → Overview → Directory (tenant) ID'
+      });
+      return;
+    }
+    
+    if (!config.githubOwner || !config.githubRepo || !config.githubToken) {
       setStatus({
         type: 'error',
         message: 'Please fill in all configuration fields first'
@@ -88,19 +107,21 @@ export const OneDriveConnection: React.FC = () => {
             <label>Client ID</label>
             <input
               type="text"
-              placeholder="Your Azure App Client ID"
+              placeholder="e.g., 48b047d9-d5d9-492d-9bb3-bb1fa3b05efd"
               value={config.clientId}
               onChange={(e) => setConfig({ ...config, clientId: e.target.value })}
             />
+            <small>From Azure Portal → Your App → Overview → Application (client) ID</small>
           </div>
           <div className="form-group">
             <label>Tenant ID</label>
             <input
               type="text"
-              placeholder="Your Azure Tenant ID"
+              placeholder="e.g., eee3095b-dd9b-4e16-90b7-8b3baca8da81"
               value={config.tenantId}
               onChange={(e) => setConfig({ ...config, tenantId: e.target.value })}
             />
+            <small>From Azure Portal → Your App → Overview → Directory (tenant) ID</small>
           </div>
         </div>
 
