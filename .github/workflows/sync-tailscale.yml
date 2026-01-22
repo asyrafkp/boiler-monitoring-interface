@@ -57,7 +57,7 @@ jobs:
         run: |
           pip install openpyxl
           sudo apt-get update
-          sudo apt-get install -y cifs-utils
+          sudo apt-get install -y cifs-utils smbclient
 
       - name: Download Excel via SMB over Tailscale
         env:
@@ -121,6 +121,22 @@ jobs:
           fi
           
           echo "✅ Device is reachable"
+          
+          # List available shares to help troubleshooting
+          echo ""
+          echo "📂 Listing available shares on $DEVICE_NAME:"
+          if [ -n "$SHARE_USERNAME" ]; then
+            # List shares with credentials
+            if [ -n "$SHARE_PASSWORD" ]; then
+              smbclient -L "//$DEVICE_NAME" -U "$SHARE_USERNAME%$SHARE_PASSWORD" 2>&1 || echo "⚠️  Could not list shares with credentials"
+            else
+              smbclient -L "//$DEVICE_NAME" -U "$SHARE_USERNAME%" 2>&1 || echo "⚠️  Could not list shares with username only"
+            fi
+          else
+            # List shares as guest
+            smbclient -L "//$DEVICE_NAME" -N 2>&1 || echo "⚠️  Could not list shares as guest"
+          fi
+          echo ""
           
           # Create mount point
           sudo mkdir -p /mnt/tailscale_share
