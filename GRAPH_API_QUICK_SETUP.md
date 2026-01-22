@@ -44,7 +44,7 @@ From the app registration **Overview** page:
 
 Go to: **GitHub repo** → **Settings** → **Secrets and variables** → **Actions**
 
-Create these 3 secrets:
+Create these 3 **required** secrets:
 
 | Secret Name | Value |
 |---|---|
@@ -52,8 +52,16 @@ Create these 3 secrets:
 | `AZURE_CLIENT_ID` | Your Client ID |
 | `AZURE_CLIENT_SECRET` | Your Client Secret |
 
-**Optional** (if you want to keep share link as fallback):
-- Keep `ONEDRIVE_LINK` if you still have it
+Create this 1 **optional** secret:
+
+| Secret Name | Value |
+|---|---|
+| `ONEDRIVE_FILE_NAME` | Exact filename: `REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx` |
+
+**Notes:**
+- If `ONEDRIVE_FILE_NAME` is not set, it defaults to `boiler_data.xlsx`
+- Use the exact filename as it appears in your OneDrive
+- Keep `ONEDRIVE_LINK` if you want fallback to share link
 
 ### ✅ Done!
 

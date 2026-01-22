@@ -76,30 +76,34 @@ try:
         'Content-Type': 'application/json'
     }
     
-    print("🔍 Searching for boiler_data.xlsx in OneDrive...")
+    # Get filename from environment or use default
+    target_filename = os.getenv('ONEDRIVE_FILE_NAME', 'boiler_data.xlsx')
     
-    # List files from user's drive root
-    search_url = "https://graph.microsoft.com/v1.0/me/drive/root/children?$filter=name eq 'boiler_data.xlsx'"
+    print(f"🔍 Searching for '{target_filename}' in OneDrive...")
+    
+    # For app permissions (client credentials), we need to use /drive instead of /me/drive
+    # Search across all SharePoint/OneDrive sites the app has access to
+    search_url = f"https://graph.microsoft.com/v1.0/me/drive/root:/{target_filename}"
     
     search_response = requests.get(search_url, headers=headers, timeout=10)
     
-    if search_response.status_code != 200:
+    if search_response.status_code == 404:
+        print(f"❌ File not found: {target_filename}")
+        print("💡 Make sure the file is in your OneDrive root folder")
+        sys.exit(1)
+    elif search_response.status_code != 200:
         print(f"❌ Search failed: {search_response.status_code}")
         print(search_response.text[:200])
         sys.exit(1)
     
-    search_json = search_response.json()
-    files = search_json.get('value', [])
-    
-    if not files:
-        print("❌ boiler_data.xlsx not found in OneDrive root")
-        print("💡 Tip: Make sure the file is in your OneDrive root folder")
-        sys.exit(1)
-    
-    file_item = files[0]
-    file_id = file_item['id']
-    file_name = file_item['name']
+    file_item = search_response.json()
+    file_id = file_item.get('id')
+    file_name = file_item.get('name')
     file_size = file_item.get('size', 0)
+    
+    if not file_id:
+        print(f"❌ Could not find file ID for {target_filename}")
+        sys.exit(1)
     
     print(f"✅ Found: {file_name} ({file_size:,} bytes)\n")
     
