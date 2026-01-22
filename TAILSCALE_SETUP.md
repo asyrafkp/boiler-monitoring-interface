@@ -1,13 +1,13 @@
-# Tailscale Setup Guide for Direct File Access
+# Tailscale + SMB Share Setup Guide
 
-This guide shows you how to use Tailscale to give GitHub Actions direct access to your Excel file, eliminating OneDrive link expiration issues.
+This guide shows you how to use Tailscale with Windows SMB share to give GitHub Actions direct access to your Excel file.
 
-## Why Tailscale?
+## Why This Solution?
 
 - ✅ **Always fresh data** - Direct file access from your PC
 - ✅ **No expiration** - No need to refresh links
-- ✅ **Simple** - Just keep your PC online when syncs run
-- ✅ **Secure** - Encrypted VPN connection
+- ✅ **Simple** - Just Windows file sharing, no SSH needed
+- ✅ **Secure** - Encrypted via Tailscale VPN
 
 ## Prerequisites
 
@@ -20,53 +20,54 @@ This guide shows you how to use Tailscale to give GitHub Actions direct access t
 1. Go to https://tailscale.com/download
 2. Download Tailscale for Windows
 3. Install and sign in
-4. Note your device name (e.g., `DESKTOP-ABC123`)
+4. Your device will get a name like `DESKTOP-ABC123` and a Tailscale IP like `100.x.x.x`
+
+**Find your device info:**
+```powershell
+tailscale status
+```
+Note down your **device name** (e.g., `DESKTOP-ABC123`)
 
 ## Step 2: Create Tailscale OAuth Client
 
 1. Go to https://login.tailscale.com/admin/settings/oauth
 2. Click **Generate OAuth client**
 3. Add tags: `tag:ci`
-4. Copy the **OAuth Client ID** and **OAuth Secret**
+4. Copy the **OAuth Client ID** and **OAuth Secret** (you'll need these for GitHub)
 
-## Step 3: Setup SSH on Your Windows PC
+## Step 3: Create SMB Share on Windows
 
-### Option A: OpenSSH (Built-in Windows)
+### 3.1 Create a folder for the Excel file (if not already)
 
-1. Open **Settings** → **Apps** → **Optional Features**
-2. Click **Add a feature**
-3. Find and install **OpenSSH Server**
-4. Open PowerShell as Administrator:
-   ```powershell
-   Start-Service sshd
-   Set-Service -Name sshd -StartupType 'Automatic'
-   ```
+For example: `C:\BoilerData\`
 
-5. Create SSH key for GitHub Actions (no password):
-   ```powershell
-   ssh-keygen -t ed25519 -f ~\.ssh\github_actions -N '""'
-   ```
+Put your Excel file there (e.g., `REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx`)
 
-6. Add public key to authorized_keys:
-   ```powershell
-   cat ~\.ssh\github_actions.pub >> ~\.ssh\authorized_keys
-   ```
+### 3.2 Share the folder
 
-7. Copy the **private key** (will be used in GitHub Secrets):
-   ```powershell
-   cat ~\.ssh\github_actions
-   ```
+1. Right-click the folder → **Properties**
+2. Go to **Sharing** tab
+3. Click **Advanced Sharing**
+4. Check **Share this folder**
+5. Note the **Share name** (e.g., `BoilerData`)
+6. Click **Permissions**
+7. Add your Windows user with **Read** permission
+8. Click **OK** to close all dialogs
 
-### Option B: Use SMB Share (Simpler, Windows only)
+### 3.3 Test the share locally
 
-1. Right-click your Excel file folder
-2. Properties → Sharing → **Share**
-3. Add **Everyone** with **Read** permission
-4. Note the network path (e.g., `\\DESKTOP-ABC123\SharedFolder`)
+Open PowerShell and test:
+```powershell
+# Test with your computer name
+net use \\localhost\BoilerData
+
+# Should show your shared folder
+dir \\localhost\BoilerData
+```
 
 ## Step 4: Configure GitHub Secrets
 
-Go to your GitHub repo → Settings → Secrets and variables → Actions
+Go to your GitHub repo → **Settings** → **Secrets and variables** → **Actions**
 
 Add these secrets:
 
@@ -74,83 +75,85 @@ Add these secrets:
 |------------|-------|---------|
 | `TAILSCALE_OAUTH_CLIENT_ID` | OAuth client ID from Step 2 | `k...` |
 | `TAILSCALE_OAUTH_SECRET` | OAuth secret from Step 2 | `tskey-client-...` |
-| `TAILSCALE_DEVICE_IP` | Your PC's Tailscale IP or hostname | `100.xx.xx.xx` or `username@DESKTOP-ABC123` |
-| `FILE_PATH` | Full path to Excel file on your PC | `C:/Users/YourName/Documents/boiler_data.xlsx` |
-| `SSH_PRIVATE_KEY` | Private key from Step 3 (if using SSH) | (the content of github_actions file) |
+| `TAILSCALE_DEVICE_NAME` | Your PC's device name (without domain) | `DESKTOP-ABC123` |
+| `SHARE_NAME` | SMB share name from Step 3 | `BoilerData` |
+| `SHARE_USERNAME` | Your Windows username | `YourName` |
+| `SHARE_PASSWORD` | Your Windows password | `YourPassword` |
+| `FILE_NAME` | Excel filename in the share | `REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx` |
 
-**To find your Tailscale IP:**
-```powershell
-tailscale ip -4
-```
+**Important:** Use just the device name (e.g., `DESKTOP-ABC123`), not the full Tailscale name.
 
-## Step 5: Test the Connection
+## Step 5: Enable the Workflow
 
-1. Go to GitHub → Actions → **Sync from Tailscale Network**
-2. Click **Run workflow**
-3. Check the logs
+The workflow is already created: `.github/workflows/sync-tailscale.yml`
+
+It will run automatically every hour, or you can test it manually:
+
+1. Go to GitHub → **Actions** → **Sync from Tailscale Network**
+2. Click **Run workflow** → **Run workflow**
+3. Watch the logs
 
 If successful, you'll see:
-- Tailscale connected
-- File downloaded
-- JSON updated
-- Changes committed
+- ✅ Tailscale connected
+- ✅ SMB share mounted
+- ✅ File copied
+- ✅ JSON updated
+- ✅ Changes committed
 
 ## Step 6: Disable Old OneDrive Workflow
 
-Rename the old workflow to disable it:
-```powershell
-cd .github/workflows
-mv sync-onedrive.yml sync-onedrive.yml.disabled
-```
+To avoid conflicts, disable the OneDrive workflow:
+
+1. Go to `.github/workflows/sync-onedrive.yml`
+2. Rename to `sync-onedrive.yml.disabled` or delete it
 
 ## Troubleshooting
 
-### SSH Connection Failed
+### "Failed to mount" error
 
-1. Check Windows Firewall allows SSH (port 22)
-2. Test SSH locally first:
+1. **Check Windows username/password** in GitHub Secrets
+2. **Verify share name** is correct (case-sensitive)
+3. **Test locally first:**
    ```powershell
-   ssh -i github_actions username@localhost
+   net use \\localhost\BoilerData /user:YourUsername YourPassword
    ```
 
-### File Not Found
+### "Device not found" error
 
-1. Use forward slashes in FILE_PATH: `C:/Users/...`
-2. Verify path is accessible:
-   ```powershell
-   Test-Path "C:/Users/YourName/Documents/boiler_data.xlsx"
-   ```
+1. **Check Tailscale is running** on your PC
+2. **Verify device name** - use `tailscale status` to confirm
+3. **Don't include domain** - use `DESKTOP-ABC123`, not `DESKTOP-ABC123.tailnet-abc.ts.net`
 
-### Tailscale Connection Failed
+### "Permission denied" error
 
-1. Check OAuth client has `tag:ci`
-2. Verify secrets are correct (no extra spaces)
-3. Check Tailscale is running on your PC
+1. **Check share permissions** - your user needs Read access
+2. **Try Full Control** temporarily to test
+3. **Check file isn't locked** - close Excel if open
 
-## Alternative: SMB Share (No SSH)
+### Workflow runs but no updates
 
-If you prefer SMB share over SSH, update the workflow:
+1. **Check your PC is online** when workflow runs
+2. **Verify file exists** in the shared folder
+3. **Check file name matches exactly** (including spaces)
 
-```yaml
-- name: Download Excel via SMB
-  env:
-    DEVICE_NAME: ${{ secrets.TAILSCALE_DEVICE_IP }}
-  run: |
-    sudo apt-get install -y cifs-utils
-    sudo mount -t cifs //$DEVICE_NAME/SharedFolder /mnt -o guest
-    cp /mnt/boiler_data.xlsx data/boiler_data.xlsx
-    sudo umount /mnt
-```
+## Tips
 
-## Maintenance
-
-- Keep your PC online during sync times (every hour)
-- Tailscale will auto-reconnect if disconnected
-- No manual link refresh needed! 🎉
+- Keep your PC online during business hours for automatic syncs
+- Tailscale reconnects automatically if disconnected
+- Monitor GitHub Actions runs to ensure syncs work
+- Share folder can be anywhere (Documents, Desktop, etc.)
 
 ## Security Notes
 
-- SSH key is used only by GitHub Actions
-- Tailscale encrypts all traffic
-- File access is read-only
+- SMB traffic encrypted by Tailscale VPN
 - No public internet exposure
+- Only GitHub Actions can access via Tailscale
+- Read-only access recommended
+- Change Windows password if leaked
+
+## Maintenance
+
+✅ **Zero maintenance** once configured!
+- PC just needs to be online during sync times
+- No manual link refreshes ever again
+- Tailscale auto-updates and reconnects

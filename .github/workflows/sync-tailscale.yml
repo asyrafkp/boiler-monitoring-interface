@@ -28,16 +28,29 @@ jobs:
       - name: Install dependencies
         run: |
           pip install openpyxl
+          sudo apt-get update
+          sudo apt-get install -y cifs-utils
 
-      - name: Download Excel via SCP
+      - name: Download Excel via SMB over Tailscale
         env:
-          TAILSCALE_DEVICE_IP: ${{ secrets.TAILSCALE_DEVICE_IP }}
-          FILE_PATH: ${{ secrets.FILE_PATH }}
+          DEVICE_NAME: ${{ secrets.TAILSCALE_DEVICE_NAME }}
+          SHARE_NAME: ${{ secrets.SHARE_NAME }}
+          SHARE_USERNAME: ${{ secrets.SHARE_USERNAME }}
+          SHARE_PASSWORD: ${{ secrets.SHARE_PASSWORD }}
+          FILE_NAME: ${{ secrets.FILE_NAME }}
         run: |
-          # Copy file from your PC via Tailscale network
-          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-            "$TAILSCALE_DEVICE_IP:$FILE_PATH" \
-            data/boiler_data.xlsx
+          # Create mount point
+          sudo mkdir -p /mnt/tailscale_share
+          
+          # Mount SMB share from Windows PC via Tailscale
+          sudo mount -t cifs "//$DEVICE_NAME/$SHARE_NAME" /mnt/tailscale_share \
+            -o username="$SHARE_USERNAME",password="$SHARE_PASSWORD",vers=3.0
+          
+          # Copy Excel file
+          cp "/mnt/tailscale_share/$FILE_NAME" data/boiler_data.xlsx
+          
+          # Unmount
+          sudo umount /mnt/tailscale_share
 
       - name: Convert Excel to JSON
         run: |
