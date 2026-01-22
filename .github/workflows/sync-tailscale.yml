@@ -180,44 +180,31 @@ jobs:
           # Delete old files to ensure fresh download
           rm -f data/boiler_data.xlsx
           
-          # Check file modification time first
+          # Check if unlocked sync file exists, otherwise use original
           echo ""
-          echo "Checking file information from SMB share..."
-          SMB_PATH=$(echo "$FILE_NAME" | sed 's/\//\\/g')
-          if [ "$USE_GUEST" = true ]; then
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "allinfo \"$SMB_PATH\"" 2>&1 | grep -E "create_time|write_time|access_time" || echo "Could not retrieve file times"
-          else
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "allinfo \"$SMB_PATH\"" 2>&1 | grep -E "create_time|write_time|access_time" || echo "Could not retrieve file times"
-          fi
+          echo "Checking for unlocked sync file..."
+          DEVICE_NAME="${{ env.TAILSCALE_DEVICE }}"
+          SHARE_NAME="${{ env.SHARE_NAME }}"
+          SYNC_FILE="${{ env.FILE_NAME }}"
+          ORIGINAL_FILE="${{ env.ORIGINAL_FILE }}"
           
-          # Try to create unlocked copy on remote PC first (read-only access works even if locked)
-          echo ""
-          echo "Creating unlocked copy on remote PC..."
           if [ "$USE_GUEST" = true ]; then
-            # Use smbclient to read locked file and write to unlocked copy
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$SMB_PATH\" /tmp/temp_boiler.xlsx" 2>&1 | grep -v "NT_STATUS_SHARING_VIOLATION" || true
-            if [ -f "/tmp/temp_boiler.xlsx" ]; then
-              echo "✅ Read locked file successfully, uploading as unlocked copy..."
-              smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "put /tmp/temp_boiler.xlsx \"$COPY_FILE\"" 2>&1
-              rm -f /tmp/temp_boiler.xlsx
-              echo "✅ Unlocked copy created: $COPY_FILE"
-              # Now download the unlocked copy
-              FILE_NAME="$COPY_FILE"
-              SMB_PATH="$COPY_FILE"
+            if smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "ls \"$SYNC_FILE\"" 2>&1 | grep -q "$SYNC_FILE"; then
+              echo "✅ Found unlocked sync file: $SYNC_FILE"
+              FILE_TO_DOWNLOAD="$SYNC_FILE"
             else
-              echo "⚠️  Could not read locked file, will try direct download..."
+              echo "⚠️  Sync file not found, using original: $ORIGINAL_FILE"
+              echo "   (File may be locked, but we'll try anyway)"
+              FILE_TO_DOWNLOAD="$ORIGINAL_FILE"
             fi
           else
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"$SMB_PATH\" /tmp/temp_boiler.xlsx" 2>&1 | grep -v "NT_STATUS_SHARING_VIOLATION" || true
-            if [ -f "/tmp/temp_boiler.xlsx" ]; then
-              echo "✅ Read locked file successfully, uploading as unlocked copy..."
-              smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "put /tmp/temp_boiler.xlsx \"$COPY_FILE\"" 2>&1
-              rm -f /tmp/temp_boiler.xlsx
-              echo "✅ Unlocked copy created: $COPY_FILE"
-              FILE_NAME="$COPY_FILE"
-              SMB_PATH="$COPY_FILE"
+            if smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "ls \"$SYNC_FILE\"" 2>&1 | grep -q "$SYNC_FILE"; then
+              echo "✅ Found unlocked sync file: $SYNC_FILE"
+              FILE_TO_DOWNLOAD="$SYNC_FILE"
             else
-              echo "⚠️  Could not read locked file, will try direct download..."
+              echo "⚠️  Sync file not found, using original: $ORIGINAL_FILE"
+              echo "   (File may be locked, but we'll try anyway)"
+              FILE_TO_DOWNLOAD="$ORIGINAL_FILE"
             fi
           fi
           
@@ -226,7 +213,10 @@ jobs:
           for ATTEMPT in $(seq 1 $MAX_RETRIES); do
             echo ""
             echo "Method 2: Direct download attempt $ATTEMPT of $MAX_RETRIES..."
-            echo "File path: $FILE_NAME"
+            echo "File path: $FILE_TO_DOWNLOAD"
+            
+            # Convert forward slashes to backslashes for SMB
+            SMB_PATH=$(echo "$FILE_TO_DOWNLOAD" | sed 's/\//\\/g')
             echo "SMB path: $SMB_PATH"
             
             if [ "$USE_GUEST" = true ]; then
