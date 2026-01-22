@@ -6,6 +6,9 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 
+env:
+  TAILSCALE_DEVICE: '100.111.83.23'  # Change this to your device IP or hostname
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -58,7 +61,7 @@ jobs:
 
       - name: Download Excel via SMB over Tailscale
         env:
-          DEVICE_NAME: ${{ secrets.TAILSCALE_DEVICE_NAME }}
+          DEVICE_NAME: ${{ env.TAILSCALE_DEVICE }}
           SHARE_NAME: ${{ secrets.SHARE_NAME }}
           SHARE_USERNAME: ${{ secrets.SHARE_USERNAME }}
           SHARE_PASSWORD: ${{ secrets.SHARE_PASSWORD }}
@@ -67,7 +70,6 @@ jobs:
           # Validate required secrets
           echo "Checking required secrets..."
           MISSING=""
-          [ -z "$DEVICE_NAME" ] && MISSING="$MISSING TAILSCALE_DEVICE_NAME"
           [ -z "$SHARE_NAME" ] && MISSING="$MISSING SHARE_NAME"
           [ -z "$FILE_NAME" ] && MISSING="$MISSING FILE_NAME"
           
@@ -77,11 +79,13 @@ jobs:
             echo "Please add these at: https://github.com/${{ github.repository }}/settings/secrets/actions"
             echo ""
             echo "Expected values:"
-            echo "  TAILSCALE_DEVICE_NAME = Your PC name from 'tailscale status' (e.g., DESKTOP-ABC123)"
             echo "  SHARE_NAME = Your SMB share name (e.g., BoilerData)"
             echo "  SHARE_USERNAME = Your Windows username (optional for guest shares)"
             echo "  SHARE_PASSWORD = Your Windows password (optional for guest shares)"
             echo "  FILE_NAME = Excel file path (e.g., file.xlsx or subfolder/file.xlsx)"
+            echo ""
+            echo "Note: TAILSCALE_DEVICE is configured in the workflow file (not a secret)"
+            echo "      Current value: $DEVICE_NAME"
             exit 1
           fi
           
