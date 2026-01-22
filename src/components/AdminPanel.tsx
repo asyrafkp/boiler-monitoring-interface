@@ -4,7 +4,7 @@ import { AdminSettings } from './AdminSettings';
 import { DataValidation } from './DataValidation';
 import { DashboardCustomization } from './DashboardCustomization';
 import { MaintenanceFeatures } from './MaintenanceFeatures';
-import { TailscaleSyncSettings } from './TailscaleSyncSettings';
+import TailscaleSyncSettings from './TailscaleSyncSettings';
 import UserManagement from './UserManagement';
 import './AdminPanel.css';
 
