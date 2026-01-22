@@ -184,7 +184,7 @@ export async function getOneDriveShareLink(
     
     // If folder path provided, use direct path API (much faster, no SPO license needed)
     if (folderPath && folderPath.trim()) {
-      const cleanPath = folderPath.trim().replace(/^\/+|\/+$/g, ''); // Remove leading/trailing slashes
+      const cleanPath = folderPath.trim().replace(/^\/+|\/+$/g, '').replace(/\\/g, '/'); // Remove leading/trailing slashes, convert backslashes
       const pathUrl = `https://graph.microsoft.com/v1.0/me/drive/root:/${cleanPath}:/children`;
       
       const pathResponse = await fetch(pathUrl, {
@@ -211,7 +211,27 @@ export async function getOneDriveShareLink(
           );
         }
       } else {
-        throw new Error(`Folder not found: ${folderPath}\n\nCheck the folder path is correct.`);
+        // Folder not found - list root folders to help user
+        const rootResponse = await fetch('https://graph.microsoft.com/v1.0/me/drive/root/children', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (rootResponse.ok) {
+          const rootData = await rootResponse.json();
+          const folders = rootData.value.filter((item: any) => item.folder);
+          const folderList = folders.map((f: any) => f.name).join('\n  - ');
+          
+          throw new Error(
+            `Folder not found: ${cleanPath}\n\n` +
+            `Available folders in your OneDrive root:\n  - ${folderList}\n\n` +
+            `Use the exact folder name. For subfolders, use: FolderName/SubfolderName`
+          );
+        }
+        
+        throw new Error(`Folder not found: ${cleanPath}\n\nCheck the folder path is correct.`);
       }
     } else {
       // No folder path - use recursive search (slower, may hit SPO license)
