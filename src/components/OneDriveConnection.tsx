@@ -23,6 +23,24 @@ export const OneDriveConnection: React.FC = () => {
     <div className="onedrive-connection">
       <h3>🔗 OneDrive Link Management</h3>
       
+      <div className="info-box" style={{ backgroundColor: '#e7f3ff', borderColor: '#0066cc', marginBottom: '20px' }}>
+        <strong>💡 Better Alternative: Tailscale Direct Access</strong>
+        <p style={{ marginTop: '8px', marginBottom: '8px' }}>
+          <strong>Tired of link expiration?</strong> Use Tailscale to give GitHub Actions direct access to your Excel file!
+        </p>
+        <p style={{ marginBottom: '8px' }}>
+          ✅ Always fresh data • ✅ No expiration • ✅ No manual refresh needed
+        </p>
+        <a 
+          href="https://github.com/asyrafkp/boiler-monitoring-interface/blob/main/TAILSCALE_SETUP.md" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          style={{ color: '#0066cc', fontWeight: 'bold' }}
+        >
+          📖 View Tailscale Setup Guide →
+        </a>
+      </div>
+      
       <div className="info-box" style={{ backgroundColor: '#fff3cd', borderColor: '#ffc107', marginBottom: '20px' }}>
         <strong>⚠️ Personal OneDrive Limitation:</strong>
         <p style={{ marginTop: '8px', marginBottom: '8px' }}>
@@ -30,7 +48,7 @@ export const OneDriveConnection: React.FC = () => {
           Unfortunately, this means the one-click refresh feature won't work with personal OneDrive accounts.
         </p>
         <p style={{ marginBottom: '0' }}>
-          <strong>Don't worry!</strong> Manual link refresh is quick and only needed every few months.
+          <strong>Manual refresh below</strong> - or consider Tailscale above for zero maintenance!
         </p>
       </div>
 

@@ -1,0 +1,51 @@
+name: Sync from Tailscale Network
+
+on:
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TAILSCALE_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install openpyxl
+
+      - name: Download Excel via SCP
+        env:
+          TAILSCALE_DEVICE_IP: ${{ secrets.TAILSCALE_DEVICE_IP }}
+          FILE_PATH: ${{ secrets.FILE_PATH }}
+        run: |
+          # Copy file from your PC via Tailscale network
+          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "$TAILSCALE_DEVICE_IP:$FILE_PATH" \
+            data/boiler_data.xlsx
+
+      - name: Convert Excel to JSON
+        run: |
+          node .github/scripts/excel_to_json.js
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add public/boiler_*.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update from Tailscale: $(date +'%Y-%m-%d %H:%M:%S')" && git push)
