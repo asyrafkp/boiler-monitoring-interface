@@ -71,7 +71,6 @@ jobs:
           USER: ${{ env.SSH_USER }}
           ORIGINAL_FILE: ${{ env.ORIGINAL_FILE }}
           COPY_FILE: ${{ env.COPY_FILE }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
           # Validate required configuration
           echo "Checking required configuration..."
