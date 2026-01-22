@@ -9,8 +9,8 @@ on:
 env:
   TAILSCALE_DEVICE: '100.111.83.23'  # Change this to your device IP or hostname
   SHARE_NAME: 'Desktop PC CCR'  # Change this to your share name (from list above)
-  FILE_NAME: 'boiler_data_sync.xlsx'  # Unlocked copy created by windows-file-watcher.ps1
-  # Original file (locked): 'Production latest/2026/01 JANUARY 2026/REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx'
+  FILE_NAME: 'Production latest/2026/01 JANUARY 2026/REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx'  # Path to Excel file
+  COPY_FILE: 'boiler_data_sync.xlsx'  # Unlocked copy that workflow creates
 
 jobs:
   sync:
@@ -176,7 +176,7 @@ jobs:
             smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "allinfo \"$FILE_NAME\"" 2>&1 | head -5
           fi
           
-          # Delete old Excel file to ensure fresh download
+          # Delete old files to ensure fresh download
           rm -f data/boiler_data.xlsx
           
           # Check file modification time first
@@ -187,6 +187,37 @@ jobs:
             smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "allinfo \"$SMB_PATH\"" 2>&1 | grep -E "create_time|write_time|access_time" || echo "Could not retrieve file times"
           else
             smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "allinfo \"$SMB_PATH\"" 2>&1 | grep -E "create_time|write_time|access_time" || echo "Could not retrieve file times"
+          fi
+          
+          # Try to create unlocked copy on remote PC first (read-only access works even if locked)
+          echo ""
+          echo "Creating unlocked copy on remote PC..."
+          if [ "$USE_GUEST" = true ]; then
+            # Use smbclient to read locked file and write to unlocked copy
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$SMB_PATH\" /tmp/temp_boiler.xlsx" 2>&1 | grep -v "NT_STATUS_SHARING_VIOLATION" || true
+            if [ -f "/tmp/temp_boiler.xlsx" ]; then
+              echo "✅ Read locked file successfully, uploading as unlocked copy..."
+              smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "put /tmp/temp_boiler.xlsx \"$COPY_FILE\"" 2>&1
+              rm -f /tmp/temp_boiler.xlsx
+              echo "✅ Unlocked copy created: $COPY_FILE"
+              # Now download the unlocked copy
+              FILE_NAME="$COPY_FILE"
+              SMB_PATH="$COPY_FILE"
+            else
+              echo "⚠️  Could not read locked file, will try direct download..."
+            fi
+          else
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"$SMB_PATH\" /tmp/temp_boiler.xlsx" 2>&1 | grep -v "NT_STATUS_SHARING_VIOLATION" || true
+            if [ -f "/tmp/temp_boiler.xlsx" ]; then
+              echo "✅ Read locked file successfully, uploading as unlocked copy..."
+              smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "put /tmp/temp_boiler.xlsx \"$COPY_FILE\"" 2>&1
+              rm -f /tmp/temp_boiler.xlsx
+              echo "✅ Unlocked copy created: $COPY_FILE"
+              FILE_NAME="$COPY_FILE"
+              SMB_PATH="$COPY_FILE"
+            else
+              echo "⚠️  Could not read locked file, will try direct download..."
+            fi
           fi
           
           # Method 2: Try direct download with retries
