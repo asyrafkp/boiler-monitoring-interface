@@ -42,8 +42,28 @@
         <p>You can close this window now.</p>
     </div>
     <script>
-        // This page is opened as a popup after Microsoft authentication
-        // The parent window reads the access token from the URL hash
+        // Extract access token from URL hash
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get('access_token');
+        const error = params.get('error');
+        const errorDescription = params.get('error_description');
+
+        if (window.opener) {
+            // Send message to parent window
+            if (accessToken) {
+                window.opener.postMessage({
+                    type: 'auth-success',
+                    accessToken: accessToken
+                }, window.location.origin);
+            } else if (error) {
+                window.opener.postMessage({
+                    type: 'auth-error',
+                    error: errorDescription || error
+                }, window.location.origin);
+            }
+        }
+
         // Close automatically after 2 seconds
         setTimeout(() => {
             window.close();
