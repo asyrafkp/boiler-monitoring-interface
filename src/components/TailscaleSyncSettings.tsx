@@ -43,7 +43,20 @@ const TailscaleSyncSettings: React.FC = () => {
   }, []);
 
   const handleChange = (field: keyof TailscaleSettings, value: string) => {
-    setSettings(prev => ({ ...prev, [field]: value }));
+    const newSettings = { ...settings, [field]: value };
+    setSettings(newSettings);
+    // Auto-save to localStorage on every change
+    localStorage.setItem('tailscale_settings', JSON.stringify(newSettings));
+  };
+
+  const handleGithubTokenChange = (value: string) => {
+    setGithubToken(value);
+    localStorage.setItem('github_token', value);
+  };
+
+  const handleRepoChange = (value: string) => {
+    setRepo(value);
+    localStorage.setItem('github_repo', value);
   };
 
   const saveLocally = () => {
@@ -210,7 +223,7 @@ const TailscaleSyncSettings: React.FC = () => {
           <input
             type={showPasswords ? 'text' : 'password'}
             value={githubToken}
-            onChange={(e) => setGithubToken(e.target.value)}
+            onChange={(e) => handleGithubTokenChange(e.target.value)}
             placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
           />
         </div>
@@ -223,7 +236,7 @@ const TailscaleSyncSettings: React.FC = () => {
           <input
             type="text"
             value={repo}
-            onChange={(e) => setRepo(e.target.value)}
+            onChange={(e) => handleRepoChange(e.target.value)}
             placeholder="asyrafkp/boiler-monitoring-interface"
           />
         </div>
