@@ -31,9 +31,11 @@ Note down your **device name** (e.g., `DESKTOP-ABC123`)
 ## Step 2: Create Tailscale OAuth Client
 
 1. Go to https://login.tailscale.com/admin/settings/trust-credentials
-2. Click **Generate OAuth client** (or **Create OAuth client**)
-3. Add tags: `tag:ci`
-4. Copy the **OAuth Client ID** and **OAuth Secret** (you'll need these for GitHub)
+2. Click **New credentials**
+3. Select **OAuth client**
+4. Add tags: `tag:ci`
+5. Click **Generate client**
+6. Copy the **Client ID** and **Client Secret** (you'll need these for GitHub)
 
 ## Step 3: Create SMB Share on Windows
 
