@@ -93,26 +93,33 @@ const TailscaleSyncSettings: React.FC = () => {
           continue; // Skip empty values (like optional credentials)
         }
 
-        // Use libsodium-wrappers for encryption (we'll load it from CDN)
-        const encryptedValue = await encryptSecret(secret.value, publicKey);
+        try {
+          // Use libsodium-wrappers for encryption (we'll load it from CDN)
+          const encryptedValue = await encryptSecret(secret.value, publicKey);
 
-        const response = await fetch(`https://api.github.com/repos/${repo}/actions/secrets/${secret.name}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `token ${githubToken}`,
-            'Accept': 'application/vnd.github.v3+json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            encrypted_value: encryptedValue,
-            key_id: key_id
-          })
-        });
+          const response = await fetch(`https://api.github.com/repos/${repo}/actions/secrets/${secret.name}`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `token ${githubToken}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              encrypted_value: encryptedValue,
+              key_id: key_id
+            })
+          });
 
-        if (response.ok) {
-          successCount++;
-        } else {
-          console.error(`Failed to update ${secret.name}:`, await response.text());
+          if (response.ok) {
+            successCount++;
+            console.log(`✅ Updated ${secret.name}`);
+          } else {
+            const errorText = await response.text();
+            console.error(`❌ Failed to update ${secret.name}:`, errorText);
+          }
+        } catch (error) {
+          console.error(`❌ Error processing ${secret.name}:`, error);
+          throw error; // Re-throw to stop processing
         }
       }
 
@@ -128,23 +135,30 @@ const TailscaleSyncSettings: React.FC = () => {
 
   // Encrypt secret using libsodium
   const encryptSecret = async (secret: string, publicKey: string): Promise<string> => {
-    // Load libsodium if not already loaded
-    if (!(window as any).sodium) {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/libsodium-wrappers@0.7.11/dist/browsers/sodium.js';
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
-      await (window as any).sodium.ready;
-    }
+    try {
+      // Load libsodium if not already loaded
+      if (!(window as any).sodium) {
+        console.log('Loading libsodium...');
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/libsodium-wrappers@0.7.13/dist/browsers/sodium.js';
+          script.onload = resolve;
+          script.onerror = () => reject(new Error('Failed to load encryption library from CDN'));
+          document.head.appendChild(script);
+        });
+        await (window as any).sodium.ready;
+        console.log('Libsodium loaded successfully');
+      }
 
-    const sodium = (window as any).sodium;
-    const binkey = sodium.from_base64(publicKey, sodium.base64_variants.ORIGINAL);
-    const binsec = sodium.from_string(secret);
-    const encBytes = sodium.crypto_box_seal(binsec, binkey);
-    return sodium.to_base64(encBytes, sodium.base64_variants.ORIGINAL);
+      const sodium = (window as any).sodium;
+      const binkey = sodium.from_base64(publicKey, sodium.base64_variants.ORIGINAL);
+      const binsec = sodium.from_string(secret);
+      const encBytes = sodium.crypto_box_seal(binsec, binkey);
+      return sodium.to_base64(encBytes, sodium.base64_variants.ORIGINAL);
+    } catch (error) {
+      console.error('Encryption error:', error);
+      throw new Error(`Failed to encrypt secret: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const testConnection = async () => {
