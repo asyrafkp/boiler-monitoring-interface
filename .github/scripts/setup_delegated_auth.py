@@ -17,9 +17,10 @@ print("=" * 70)
 # Get Azure app credentials
 TENANT_ID = input("\nEnter your AZURE_TENANT_ID: ").strip()
 CLIENT_ID = input("Enter your AZURE_CLIENT_ID: ").strip()
+CLIENT_SECRET = input("Enter your AZURE_CLIENT_SECRET: ").strip()
 
-if not TENANT_ID or not CLIENT_ID:
-    print("❌ Error: Tenant ID and Client ID are required")
+if not TENANT_ID or not CLIENT_ID or not CLIENT_SECRET:
+    print("❌ Error: Tenant ID, Client ID, and Client Secret are required")
     sys.exit(1)
 
 print(f"\n✅ Using Tenant: {TENANT_ID[:8]}...")
@@ -71,6 +72,7 @@ try:
     
     token_data = {
         'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
         'grant_type': 'urn:ietf:params:oauth:grant-type:device_code',
         'device_code': device_code
     }
