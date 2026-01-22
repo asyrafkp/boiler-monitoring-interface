@@ -49,6 +49,7 @@ A button in your Admin Panel that:
 
    **OneDrive File:**
    - Excel Filename: `REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx`
+   - Note: File can be in any folder (searches entire OneDrive)
 
 3. Click **💾 Save Configuration**
 
@@ -106,8 +107,9 @@ Success! ✅
 - Check repository owner/name are correct
 
 **"File not found"**
-- Ensure Excel file is in OneDrive root folder
-- Check filename spelling exactly
+- Ensure filename matches exactly (case-sensitive)
+- Check for extra spaces in filename
+- Script searches entire OneDrive, not just root
 
 ## 🎉 Benefits Over Manual Method
 

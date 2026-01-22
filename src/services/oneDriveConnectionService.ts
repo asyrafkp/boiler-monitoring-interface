@@ -94,8 +94,8 @@ export async function getOneDriveShareLink(
   fileName: string
 ): Promise<string> {
   try {
-    // Search for file
-    const searchUrl = `https://graph.microsoft.com/v1.0/me/drive/root:/${fileName}`;
+    // Search for file anywhere in OneDrive using search API
+    const searchUrl = `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(fileName)}')`;
     const searchResponse = await fetch(searchUrl, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -104,11 +104,20 @@ export async function getOneDriveShareLink(
     });
 
     if (!searchResponse.ok) {
-      throw new Error(`File not found: ${fileName}`);
+      throw new Error(`Search failed for file: ${fileName}`);
     }
 
-    const fileData = await searchResponse.json();
-    const fileId = fileData.id;
+    const searchData = await searchResponse.json();
+    const files = searchData.value || [];
+    
+    // Find exact match
+    const file = files.find((f: any) => f.name === fileName);
+    
+    if (!file) {
+      throw new Error(`File not found: ${fileName}. Found ${files.length} similar files. Make sure the filename is exactly correct.`);
+    }
+
+    const fileId = file.id;
 
     // Create sharing link
     const shareUrl = `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/createLink`;

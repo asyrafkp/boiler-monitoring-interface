@@ -152,7 +152,7 @@ export const OneDriveConnection: React.FC = () => {
               value={config.fileName}
               onChange={(e) => setConfig({ ...config, fileName: e.target.value })}
             />
-            <small>Must be in your OneDrive root folder</small>
+            <small>File can be anywhere in your OneDrive (searches all folders)</small>
           </div>
         </div>
       </div>
