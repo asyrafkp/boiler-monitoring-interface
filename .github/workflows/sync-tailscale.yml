@@ -14,9 +14,13 @@ env:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate Tailscale Auth Key
         run: |
@@ -250,3 +254,5 @@ jobs:
           git config user.email "actions@github.com"
           git add public/boiler_*.json
           git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update from Tailscale: $(date +'%Y-%m-%d %H:%M:%S')" && git push)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
