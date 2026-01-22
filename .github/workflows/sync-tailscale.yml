@@ -8,9 +8,9 @@ on:
 
 env:
   TAILSCALE_DEVICE: '100.111.83.23'
-  SHARE_NAME: 'Desktop PC CCR'
-  FILE_NAME: 'boiler_data_copy.xlsx'  # Copy of the Excel file (not locked)
-  ORIGINAL_FILE: 'Production latest/2026/01 JANUARY 2026/REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx'
+  SSH_USER: 'CCR'
+  ORIGINAL_FILE: 'C:/Users/CCR/Desktop/Production latest/2026/01 JANUARY 2026/REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx'
+  COPY_FILE: 'C:/Users/CCR/Desktop/Desktop PC CCR/boiler_data_copy.xlsx'
 
 jobs:
   sync:
