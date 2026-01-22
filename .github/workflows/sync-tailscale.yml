@@ -184,15 +184,16 @@ jobs:
             
             if [ "$USE_GUEST" = true ]; then
               echo "Command: smbclient //$DEVICE_NAME/$SHARE_NAME -N -c 'get \"$SMB_PATH\" data/boiler_data.xlsx'"
-              DOWNLOAD_OUTPUT=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1)
+              smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1 | tee /tmp/download.log
+              DOWNLOAD_OUTPUT=$(cat /tmp/download.log)
             else
               echo "Command: smbclient //$DEVICE_NAME/$SHARE_NAME -U $SHARE_USERNAME% -c 'get \"$SMB_PATH\" data/boiler_data.xlsx'"
-              DOWNLOAD_OUTPUT=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1)
+              smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1 | tee /tmp/download.log
+              DOWNLOAD_OUTPUT=$(cat /tmp/download.log)
             fi
             
-            echo "Output:"
-            echo "$DOWNLOAD_OUTPUT"
             echo ""
+            echo "Exit code: $?"
             
             # Check if download succeeded
             if [ -f "data/boiler_data.xlsx" ] && [ -s "data/boiler_data.xlsx" ]; then
