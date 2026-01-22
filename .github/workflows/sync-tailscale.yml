@@ -11,9 +11,8 @@ on:
 env:
   TAILSCALE_DEVICE: '100.111.83.23'
   SHARE_NAME: 'Desktop PC CCR'
-  FILE_NAME: 'boiler_data_sync.xlsx'  # Unlocked copy created by scheduled task
-  ORIGINAL_FILE: 'Production latest/2026/01 JANUARY 2026/REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx'  # Original locked file
-  COPY_FILE: 'boiler_data_sync.xlsx'
+  FILE_NAME: 'boiler_data_copy.xlsx'  # Copy of the Excel file (not locked)
+  ORIGINAL_FILE: 'Production latest/2026/01 JANUARY 2026/REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx'
 
 jobs:
   sync:
@@ -190,7 +189,7 @@ jobs:
           
           DEVICE_NAME="${{ env.TAILSCALE_DEVICE }}"
           SHARE_NAME="${{ env.SHARE_NAME }}"
-          ORIGINAL_FILE="${{ env.ORIGINAL_FILE }}"
+          ORIGINAL_FILE="${{ env.FILE_NAME }}"  # Using the copy file now
           
           # Convert path for SMB
           SMB_PATH=$(echo "$ORIGINAL_FILE" | sed 's/\//\\/g')
