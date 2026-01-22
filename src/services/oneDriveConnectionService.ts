@@ -120,63 +120,61 @@ export async function getOneDriveShareLink(
   fileName: string
 ): Promise<string> {
   try {
-    // Try multiple search strategies
     let file: any = null;
-    let searchUrl: string;
     
-    // Strategy 1: Search with simplified query (without special characters encoding issues)
-    const simpleSearchQuery = fileName.replace(/[^\w\s.]/g, ' ').trim();
-    searchUrl = `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(simpleSearchQuery)}')`;
+    // Strategy 1: Use the simpler search endpoint (works with files in any folder)
+    // Just search by filename without path
+    const searchQuery = fileName.split('.')[0]; // Remove extension for broader search
+    const searchUrl = `https://graph.microsoft.com/v1.0/me/drive/search(q='${encodeURIComponent(searchQuery)}')`;
     
-    let searchResponse = await fetch(searchUrl, {
+    console.log('Searching OneDrive for:', fileName);
+    const searchResponse = await fetch(searchUrl, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       }
     });
 
-    let searchData: any = { value: [] };
-    
     if (searchResponse.ok) {
-      searchData = await searchResponse.json();
+      const searchData = await searchResponse.json();
       const files = searchData.value || [];
-      // Find exact match (case-insensitive)
-      file = files.find((f: any) => f.name.toLowerCase() === fileName.toLowerCase());
-    }
-    
-    // Strategy 2: If not found, try listing root folder
-    if (!file) {
-      const listUrl = 'https://graph.microsoft.com/v1.0/me/drive/root/children?$top=1000';
-      const listResponse = await fetch(listUrl, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      console.log(`Found ${files.length} files matching search`);
       
-      if (listResponse.ok) {
-        const listData = await listResponse.json();
-        const allFiles = listData.value || [];
-        // Find exact match (case-insensitive)
-        file = allFiles.find((f: any) => f.name.toLowerCase() === fileName.toLowerCase());
+      // Find exact match (case-insensitive)
+      file = files.find((f: any) => 
+        f.name.toLowerCase() === fileName.toLowerCase() && 
+        f.file // Ensure it's a file, not a folder
+      );
+      
+      if (!file && files.length > 0) {
+        // Show all Excel files found
+        const excelFiles = files.filter((f: any) => f.name.match(/\.xlsx?$/i) && f.file);
+        const fileList = excelFiles.map((f: any) => 
+          `${f.name} (in: ${f.parentReference?.path || 'root'})`
+        ).join('\n  - ');
         
-        if (!file) {
-          // List all Excel files for debugging
-          const excelFiles = allFiles.filter((f: any) => f.name.match(/\.xlsx?$/i));
-          const fileList = excelFiles.map((f: any) => f.name).join('\n  - ');
-          throw new Error(
-            `File not found: ${fileName}\n\n` +
-            `Found ${excelFiles.length} Excel files in your OneDrive root:\n  - ${fileList}\n\n` +
-            `Make sure the filename exactly matches (including spaces and case).`
-          );
-        }
+        throw new Error(
+          `Exact match not found for: ${fileName}\n\n` +
+          `Found ${excelFiles.length} Excel files in your OneDrive:\n  - ${fileList}\n\n` +
+          `Copy the exact filename from above (including all spaces and dashes).`
+        );
       }
+    } else {
+      const errorData = await searchResponse.json();
+      throw new Error(`Search failed: ${errorData.error?.message || 'Unknown error'}`);
     }
     
     if (!file) {
-      throw new Error(`File not found: ${fileName}\n\nSearch URL: ${searchUrl}`);
+      throw new Error(
+        `File not found: ${fileName}\n\n` +
+        `Make sure:\n` +
+        `1. The file exists in your OneDrive (any folder)\n` +
+        `2. The filename is exactly correct (including spaces)\n` +
+        `3. You have permission to access the file`
+      );
     }
 
+    console.log('File found:', file.name, 'ID:', file.id);
     const fileId = file.id;
 
     // For personal OneDrive accounts, use permissions API instead of createLink
