@@ -8,8 +8,8 @@ on:
 
 env:
   TAILSCALE_DEVICE: '100.111.83.23'  # Change this to your device IP or hostname
-  SHARE_NAME: 'C$'  # C: drive administrative share
-  FILE_NAME: 'Users/CCR/Desktop/OneDrive/Desktop/Production Latest/2026/01 JANUARY 2026/REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx'  # Path from C: drive
+  SHARE_NAME: 'Desktop PC CCR'  # Change this to your share name (from list above)
+  FILE_NAME: 'Production Latest/2026/01 JANUARY 2026/REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx'  # Path to Excel file
 
 jobs:
   sync:
@@ -205,29 +205,42 @@ jobs:
             exit 1
           fi
           
-          # List share contents to verify path
+          # Verify mount and check accessibility
           echo ""
-          echo "📂 Listing share contents:"
-          echo "Root of share:"
-          ls -la /mnt/tailscale_share/ || echo "Cannot list root"
-          echo ""
+          echo "📂 Verifying mounted share: Desktop PC CCR"
+          echo "=================================================="
           
-          # Recursively search for files and folders (max 3 levels deep)
-          echo "🔍 Searching recursively (up to 3 levels deep):"
-          find /mnt/tailscale_share -maxdepth 3 -type d 2>/dev/null | head -30 || echo "Cannot search"
           echo ""
+          echo "1️⃣ Root directory listing:"
+          ls -la /mnt/tailscale_share/ || echo "❌ Cannot list root"
           
-          echo "🔍 Searching for Excel files:"
-          find /mnt/tailscale_share -maxdepth 5 -type f -name "*.xlsx" 2>/dev/null | head -10 || echo "No Excel files found"
           echo ""
+          echo "2️⃣ Checking if root is readable:"
+          if [ -r /mnt/tailscale_share ]; then
+            echo "✅ Root is readable"
+          else
+            echo "❌ Root is not readable"
+          fi
           
-          echo "🔍 Searching for 'Production' or 'JANUARY' in paths:"
-          find /mnt/tailscale_share -maxdepth 5 2>/dev/null | grep -i -E "(production|january)" | head -20 || echo "Not found"
           echo ""
+          echo "3️⃣ Testing directory access with ls command:"
+          ls /mnt/tailscale_share/ 2>&1 || echo "❌ Cannot access"
           
-          # Copy Excel file
-          echo "Attempting to copy: $FILE_NAME"
-          cp "/mnt/tailscale_share/$FILE_NAME" data/boiler_data.xlsx
+          echo ""
+          echo "4️⃣ Using find to list all items in root (including hidden):"
+          find /mnt/tailscale_share -maxdepth 1 2>&1 || echo "❌ Find failed"
+          
+          echo ""
+          echo "5️⃣ Checking mount status:"
+          mount | grep tailscale_share || echo "❌ Not in mount table"
+          
+          echo ""
+          echo "6️⃣ Checking mount options:"
+          cat /proc/mounts | grep tailscale_share || echo "❌ Not in proc/mounts"
+          
+          echo ""
+          echo "=================================================="
+          echo "⚠️  Skipping file copy for now - verifying mount only"
           
           # Unmount
           sudo umount /mnt/tailscale_share
