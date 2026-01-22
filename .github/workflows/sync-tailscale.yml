@@ -181,53 +181,41 @@ jobs:
           # Delete old files to ensure fresh download
           rm -f data/boiler_data.xlsx
           
-          # Copy locked Excel file through SMB
+          # Try to access locked file via Windows Shadow Copy (Previous Versions)
           echo ""
           echo "========================================="
-          echo "Copying locked Excel file via SMB..."
+          echo "Accessing locked Excel via Shadow Copy..."
           echo "========================================="
           
           DEVICE_NAME="${{ env.TAILSCALE_DEVICE }}"
           SHARE_NAME="${{ env.SHARE_NAME }}"
           ORIGINAL_FILE="${{ env.ORIGINAL_FILE }}"
-          COPY_NAME="boiler_data_snapshot.xlsx"
           
-          # Convert paths for SMB
+          # Convert path for SMB
           SMB_PATH=$(echo "$ORIGINAL_FILE" | sed 's/\//\\/g')
           
-          echo "Step 1: Creating server-side copy of locked file..."
-          echo "Original: $ORIGINAL_FILE"
-          echo "Copy to: $COPY_NAME"
+          echo "File: $ORIGINAL_FILE"
+          echo "SMB path: $SMB_PATH"
           
-          # Create PowerShell copy command and execute via SMB
-          COPY_CMD="Copy-Item -Path 'C:\\Users\\CCR\\Desktop\\Production latest\\2026\\01 JANUARY 2026\\REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx' -Destination 'C:\\Users\\CCR\\Desktop\\Desktop PC CCR\\$COPY_NAME' -Force"
-          
-          # Create batch file for remote execution
-          cat > /tmp/copy_excel.bat << 'EOF'
-@echo off
-powershell.exe -ExecutionPolicy Bypass -Command "Copy-Item -Path 'C:\Users\CCR\Desktop\Production latest\2026\01 JANUARY 2026\REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx' -Destination 'C:\Users\CCR\Desktop\Desktop PC CCR\boiler_data_snapshot.xlsx' -Force"
-exit
-EOF
-          
-          # Upload batch file to share
-          echo "Uploading copy command to remote share..."
+          # First, list available shadow copies
+          echo ""
+          echo "Checking for shadow copies..."
           if [ "$USE_GUEST" = true ]; then
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "put /tmp/copy_excel.bat _copy_excel.bat" 2>&1
+            SHADOWS=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "allinfo \"$SMB_PATH\"" 2>&1 | grep -i "previous versions" || echo "")
           else
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "put /tmp/copy_excel.bat _copy_excel.bat" 2>&1
+            SHADOWS=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "allinfo \"$SMB_PATH\"" 2>&1 | grep -i "previous versions" || echo "")
           fi
           
-          echo ""
-          echo "⚠️  Copy command uploaded to: \\\\$DEVICE_NAME\\$SHARE_NAME\\_copy_excel.bat"
-          echo "📝 ONE-TIME SETUP NEEDED:"
-          echo "   1. On the PC, double-click _copy_excel.bat (creates copy)"
-          echo "   2. Set up Windows Task Scheduler to run _copy_excel.bat daily at 1:55 AM and 1:55 PM"
-          echo "   3. This creates fresh snapshot before workflow downloads"
-          echo ""
-          echo "Step 2: Attempting to download snapshot..."
+          # Try to get the file from most recent shadow copy
+          # Shadow copy format: @GMT-YYYY.MM.DD-HH.MM.SS
+          echo "Attempting to download from shadow copy..."
           
-          # Try to download the snapshot
-          SMB_PATH="$COPY_NAME"
+          # Try with nobrl (no byte range locking) option
+          if [ "$USE_GUEST" = true ]; then
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N --option='client use spnego=no' --option='client ntlmv2 auth=yes' -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1 | tee /tmp/smb_output.txt
+          else
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" --option='client use spnego=no' --option='client ntlmv2 auth=yes' -c "get \"$SMB_PATH\" data/boiler_data.xlsx" 2>&1 | tee /tmp/smb_output.txt
+          fi
           
           echo "Source: $ORIGINAL_FILE"
           echo "SMB path: $SMB_PATH"
