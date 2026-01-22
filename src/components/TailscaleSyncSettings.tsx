@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import _sodium from 'libsodium-wrappers';
 import './TailscaleSyncSettings.css';
 
 interface TailscaleSettings {
@@ -133,27 +134,21 @@ const TailscaleSyncSettings: React.FC = () => {
     }
   };
 
-  // Encrypt secret using libsodium
+  // Encrypt secret using libsodium (now imported as npm package)
   const encryptSecret = async (secret: string, publicKey: string): Promise<string> => {
     try {
-      // Load libsodium if not already loaded
-      if (!(window as any).sodium) {
-        console.log('Loading libsodium...');
-        await new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = 'https://cdn.jsdelivr.net/npm/libsodium-wrappers@0.7.13/dist/browsers/sodium.js';
-          script.onload = resolve;
-          script.onerror = () => reject(new Error('Failed to load encryption library from CDN'));
-          document.head.appendChild(script);
-        });
-        await (window as any).sodium.ready;
-        console.log('Libsodium loaded successfully');
-      }
-
-      const sodium = (window as any).sodium;
+      // Wait for sodium to be ready
+      await _sodium.ready;
+      const sodium = _sodium;
+      
+      // Convert base64 public key and secret to binary
       const binkey = sodium.from_base64(publicKey, sodium.base64_variants.ORIGINAL);
       const binsec = sodium.from_string(secret);
+      
+      // Encrypt using sealed box
       const encBytes = sodium.crypto_box_seal(binsec, binkey);
+      
+      // Return as base64
       return sodium.to_base64(encBytes, sodium.base64_variants.ORIGINAL);
     } catch (error) {
       console.error('Encryption error:', error);
