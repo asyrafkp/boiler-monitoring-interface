@@ -278,14 +278,33 @@ jobs:
         run: npm install xlsx
 
       - name: Convert Excel to JSON
+        if: always()  # Run even if download failed
         run: |
-          node .github/scripts/excel_to_json.js
+          if [ -f "data/boiler_data.xlsx" ]; then
+            echo "Converting Excel to JSON..."
+            node .github/scripts/excel_to_json.js
+          else
+            echo "⚠️  No Excel file to convert, skipping..."
+          fi
 
       - name: Commit and push changes
+        if: always()  # Run even if download failed
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          git add data/boiler_data.xlsx public/boiler_*.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update from Tailscale: $(date +'%Y-%m-%d %H:%M:%S')" && git push)
+          
+          # Check if there are any changes
+          if git diff --quiet public/boiler_*.json data/boiler_data.xlsx 2>/dev/null; then
+            echo "ℹ️  No changes to commit (file was locked or no new data)"
+          else
+            git add data/boiler_data.xlsx public/boiler_*.json 2>/dev/null || true
+            if git diff --staged --quiet; then
+              echo "ℹ️  No staged changes"
+            else
+              git commit -m "Auto-update from Tailscale: $(date +'%Y-%m-%d %H:%M:%S')"
+              git push
+              echo "✅ Changes pushed successfully"
+            fi
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
