@@ -47,9 +47,8 @@ const waterSheet = workbook.Sheets[waterSheetName];
 function parseNGSteamSheet(worksheet) {
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
   
-  // Search from row 540 down to row 9 (user confirmed row 535/index 533 has latest valid data)
-  // Limiting search to avoid test data in later rows
-  const maxRow = Math.min(data.length - 1, 540);
+  // Search from row 600 down to row 9 (data rows increase as new entries added)
+  const maxRow = Math.min(data.length - 1, 600);
   
   for (let i = maxRow; i >= 9; i--) {
     const row = data[i];
@@ -59,6 +58,17 @@ function parseNGSteamSheet(worksheet) {
     const b1Steam = parseFloat(row[3]) || 0;
     const b2Steam = parseFloat(row[7]) || 0;
     const b3Steam = parseFloat(row[11]) || 0;
+    
+    // Skip cumulative rows (daily totals) - identified by abnormally high values
+    // Normal hourly steam production is typically < 20 MT per boiler
+    // Cumulative rows will have 100+ MT
+    if (b1Steam > 50 || b2Steam > 50 || b3Steam > 50) {
+      continue; // Skip cumulative/total rows
+    }
+    
+    // Skip rows with negative values (calculation errors or formulas)
+    const hasNegative = row.some(val => typeof val === 'number' && val < 0);
+    if (hasNegative) continue;
     
     // Find the first row with ANY boiler data, then return ALL boilers from that SAME row
     if (b1Steam > 0 || b2Steam > 0 || b3Steam > 0) {
