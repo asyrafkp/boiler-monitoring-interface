@@ -175,15 +175,22 @@ jobs:
             smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "allinfo \"$FILE_NAME\"" 2>&1 | head -5
           fi
           
+          # Check file modification time first
+          echo ""
+          echo "Checking file information from SMB share..."
+          SMB_PATH=$(echo "$FILE_NAME" | sed 's/\//\\/g')
+          if [ "$USE_GUEST" = true ]; then
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "allinfo \"$SMB_PATH\"" 2>&1 | grep -E "create_time|write_time|access_time" || echo "Could not retrieve file times"
+          else
+            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "allinfo \"$SMB_PATH\"" 2>&1 | grep -E "create_time|write_time|access_time" || echo "Could not retrieve file times"
+          fi
+          
           # Method 2: Try direct download with retries
           MAX_RETRIES=3
           for ATTEMPT in $(seq 1 $MAX_RETRIES); do
             echo ""
             echo "Method 2: Direct download attempt $ATTEMPT of $MAX_RETRIES..."
             echo "File path: $FILE_NAME"
-            
-            # Convert forward slashes to backslashes for SMB
-            SMB_PATH=$(echo "$FILE_NAME" | sed 's/\//\\/g')
             echo "SMB path: $SMB_PATH"
             
             if [ "$USE_GUEST" = true ]; then
