@@ -137,17 +137,17 @@ jobs:
             fi
             chmod 600 /tmp/smb_creds
             
-            # Mount with credentials
-            sudo mount -t cifs "//$DEVICE_NAME/$SHARE_NAME" /mnt/tailscale_share \
-              -o credentials=/tmp/smb_creds,vers=3.0,uid=$(id -u),gid=$(id -g)
+            # Mount with credentials (handle spaces in share name)
+            sudo mount -t cifs "//${DEVICE_NAME}/${SHARE_NAME}" /mnt/tailscale_share \
+              -o "credentials=/tmp/smb_creds,vers=3.0,uid=$(id -u),gid=$(id -g)"
             
             # Clean up credentials file
             rm -f /tmp/smb_creds
           else
             echo "🔓 Mounting as guest (no credentials)..."
             # Mount without credentials (guest access)
-            sudo mount -t cifs "//$DEVICE_NAME/$SHARE_NAME" /mnt/tailscale_share \
-              -o guest,vers=3.0,uid=$(id -u),gid=$(id -g)
+            sudo mount -t cifs "//${DEVICE_NAME}/${SHARE_NAME}" /mnt/tailscale_share \
+              -o "guest,vers=3.0,uid=$(id -u),gid=$(id -g)"
           fi
           
           # Copy Excel file
