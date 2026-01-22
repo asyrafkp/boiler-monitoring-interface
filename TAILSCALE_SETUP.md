@@ -83,11 +83,13 @@ Add these secrets:
 | `TAILSCALE_AUTHKEY` | Auth key from Step 2 | `tskey-auth-...` |
 | `TAILSCALE_DEVICE_NAME` | Your PC's device name (short or full Tailscale name) | `DESKTOP-ABC123` or `DESKTOP-ABC123.tailnet-abc.ts.net` |
 | `SHARE_NAME` | SMB share name from Step 3 | `BoilerData` |
-| `SHARE_USERNAME` | Your Windows username | `YourName` |
-| `SHARE_PASSWORD` | Your Windows password | `YourPassword` |
+| `SHARE_USERNAME` | Your Windows username (leave empty for guest access) | `YourName` or empty |
+| `SHARE_PASSWORD` | Your Windows password (leave empty for guest access) | `YourPassword` or empty |
 | `FILE_NAME` | Excel filename in the share | `REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx` |
 
-**Note:** Both short name (`DESKTOP-ABC123`) and full Tailscale name work. Use whichever `tailscale status` shows.
+**Note:** 
+- Both short name (`DESKTOP-ABC123`) and full Tailscale name work. Use whichever `tailscale status` shows.
+- If your share doesn't require authentication, leave `SHARE_USERNAME` and `SHARE_PASSWORD` empty - the workflow will mount as guest.
 
 ## Step 5: Enable the Workflow
 

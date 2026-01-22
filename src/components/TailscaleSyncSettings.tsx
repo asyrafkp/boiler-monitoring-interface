@@ -88,7 +88,10 @@ const TailscaleSyncSettings: React.FC = () => {
 
       let successCount = 0;
       for (const secret of secrets) {
-        if (!secret.value) continue; // Skip empty values
+        if (!secret.value) {
+          console.log(`Skipping empty secret: ${secret.name}`);
+          continue; // Skip empty values (like optional credentials)
+        }
 
         // Use libsodium-wrappers for encryption (we'll load it from CDN)
         const encryptedValue = await encryptSecret(secret.value, publicKey);
@@ -267,22 +270,28 @@ const TailscaleSyncSettings: React.FC = () => {
         </div>
 
         <div className="form-group">
-          <label>Windows Username</label>
+          <label>
+            Windows Username
+            <span className="help-text">Leave empty for guest/public shares</span>
+          </label>
           <input
             type="text"
             value={settings.shareUsername}
             onChange={(e) => handleChange('shareUsername', e.target.value)}
-            placeholder="Your Windows username"
+            placeholder="Your Windows username (optional)"
           />
         </div>
 
         <div className="form-group">
-          <label>Windows Password</label>
+          <label>
+            Windows Password
+            <span className="help-text">Leave empty for guest/public shares</span>
+          </label>
           <input
             type={showPasswords ? 'text' : 'password'}
             value={settings.sharePassword}
             onChange={(e) => handleChange('sharePassword', e.target.value)}
-            placeholder="Your Windows password"
+            placeholder="Your Windows password (optional)"
           />
         </div>
 

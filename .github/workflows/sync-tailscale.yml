@@ -42,8 +42,6 @@ jobs:
           MISSING=""
           [ -z "$DEVICE_NAME" ] && MISSING="$MISSING TAILSCALE_DEVICE_NAME"
           [ -z "$SHARE_NAME" ] && MISSING="$MISSING SHARE_NAME"
-          [ -z "$SHARE_USERNAME" ] && MISSING="$MISSING SHARE_USERNAME"
-          [ -z "$SHARE_PASSWORD" ] && MISSING="$MISSING SHARE_PASSWORD"
           [ -z "$FILE_NAME" ] && MISSING="$MISSING FILE_NAME"
           
           if [ -n "$MISSING" ]; then
@@ -54,8 +52,8 @@ jobs:
             echo "Expected values:"
             echo "  TAILSCALE_DEVICE_NAME = Your PC name from 'tailscale status' (e.g., DESKTOP-ABC123)"
             echo "  SHARE_NAME = Your SMB share name (e.g., BoilerData)"
-            echo "  SHARE_USERNAME = Your Windows username"
-            echo "  SHARE_PASSWORD = Your Windows password"
+            echo "  SHARE_USERNAME = Your Windows username (optional for guest shares)"
+            echo "  SHARE_PASSWORD = Your Windows password (optional for guest shares)"
             echo "  FILE_NAME = Excel filename (e.g., REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx)"
             exit 1
           fi
@@ -65,23 +63,32 @@ jobs:
           # Create mount point
           sudo mkdir -p /mnt/tailscale_share
           
-          # Create credentials file for mount (more secure than command line)
-          echo "username=$SHARE_USERNAME" > /tmp/smb_creds
-          echo "password=$SHARE_PASSWORD" >> /tmp/smb_creds
-          chmod 600 /tmp/smb_creds
-          
-          # Mount SMB share from Windows PC via Tailscale
-          sudo mount -t cifs "//$DEVICE_NAME/$SHARE_NAME" /mnt/tailscale_share \
-            -o credentials=/tmp/smb_creds,vers=3.0,uid=$(id -u),gid=$(id -g)
+          # Mount with or without credentials
+          if [ -n "$SHARE_USERNAME" ] && [ -n "$SHARE_PASSWORD" ]; then
+            echo "🔐 Mounting with credentials..."
+            # Create credentials file for mount
+            echo "username=$SHARE_USERNAME" > /tmp/smb_creds
+            echo "password=$SHARE_PASSWORD" >> /tmp/smb_creds
+            chmod 600 /tmp/smb_creds
+            
+            # Mount with credentials
+            sudo mount -t cifs "//$DEVICE_NAME/$SHARE_NAME" /mnt/tailscale_share \
+              -o credentials=/tmp/smb_creds,vers=3.0,uid=$(id -u),gid=$(id -g)
+            
+            # Clean up credentials file
+            rm -f /tmp/smb_creds
+          else
+            echo "🔓 Mounting as guest (no credentials)..."
+            # Mount without credentials (guest access)
+            sudo mount -t cifs "//$DEVICE_NAME/$SHARE_NAME" /mnt/tailscale_share \
+              -o guest,vers=3.0,uid=$(id -u),gid=$(id -g)
+          fi
           
           # Copy Excel file
           cp "/mnt/tailscale_share/$FILE_NAME" data/boiler_data.xlsx
           
           # Unmount
           sudo umount /mnt/tailscale_share
-          
-          # Clean up credentials file
-          rm -f /tmp/smb_creds
 
       - name: Convert Excel to JSON
         run: |
