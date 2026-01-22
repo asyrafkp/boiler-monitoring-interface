@@ -132,27 +132,45 @@ jobs:
           echo "📂 Browsing share with smbclient: $SHARE_NAME"
           echo "=================================================="
           
-          # Try to list contents and download file using smbclient
-          if [ -n "$SHARE_USERNAME" ]; then
-            echo "Using username: $SHARE_USERNAME"
+          # Try guest access first (this worked earlier)
+          echo "Trying guest access..."
+          if smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "ls" 2>&1 | head -50; then
+            USE_GUEST=true
+            echo "✅ Guest access works"
+          elif [ -n "$SHARE_USERNAME" ]; then
+            echo "Guest failed, trying username: $SHARE_USERNAME"
             smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "ls" 2>&1 | head -50
+            USE_GUEST=false
           else
-            echo "Using guest access"
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "ls" 2>&1 | head -50
+            echo "❌ Cannot access share"
+            exit 1
           fi
           
           echo ""
           echo "=================================================="
           
-          # Try to download file with smbclient instead of mount+cp
+          # Try to download file with smbclient
           echo ""
+          echo "⚠️  IMPORTANT: Close the Excel file on your PC if it's open!"
           echo "Attempting to download file with smbclient..."
           mkdir -p data
           
-          if [ -n "$SHARE_USERNAME" ]; then
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"$FILE_NAME\" data/boiler_data.xlsx" 2>&1
+          if [ "$USE_GUEST" = true ]; then
+            echo "Using guest access to download..."
+            DOWNLOAD_OUTPUT=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$FILE_NAME\" data/boiler_data.xlsx" 2>&1)
           else
-            smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"$FILE_NAME\" data/boiler_data.xlsx" 2>&1
+            echo "Using username to download..."
+            DOWNLOAD_OUTPUT=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "get \"$FILE_NAME\" data/boiler_data.xlsx" 2>&1)
+          fi
+          
+          echo "$DOWNLOAD_OUTPUT"
+          
+          # Check for sharing violation
+          if echo "$DOWNLOAD_OUTPUT" | grep -q "NT_STATUS_SHARING_VIOLATION"; then
+            echo ""
+            echo "❌ ERROR: File is currently open on your PC!"
+            echo "Please close the Excel file and run this workflow again."
+            exit 1
           fi
           
           # Check if file was downloaded
