@@ -31,10 +31,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
-      - name: Download Excel from OneDrive
+      - name: Download Excel from OneDrive (Graph API with Microsoft Account)
         env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ONEDRIVE_ITEM_ID: ${{ secrets.ONEDRIVE_ITEM_ID }}
           ONEDRIVE_LINK: ${{ secrets.ONEDRIVE_LINK }}
-        run: python .github/scripts/download_from_onedrive.py
+        run: python .github/scripts/download_from_graph_api.py
         
       - name: Check if file was downloaded
         run: |
