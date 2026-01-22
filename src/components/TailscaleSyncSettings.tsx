@@ -241,7 +241,10 @@ const TailscaleSyncSettings: React.FC = () => {
         warnings.push('Share name should not contain slashes');
       }
 
-      if (!settings.fileName.toLowerCase().endsWith('.xlsx') && !settings.fileName.toLowerCase().endsWith('.xls')) {
+      // Extract just the filename from the path for validation
+      const fileName = settings.fileName.split(/[\\/]/).pop() || '';
+      
+      if (!fileName.toLowerCase().endsWith('.xlsx') && !fileName.toLowerCase().endsWith('.xls')) {
         warnings.push('File name should be an Excel file (.xlsx or .xls)');
       }
 
@@ -260,9 +263,10 @@ const TailscaleSyncSettings: React.FC = () => {
         });
       } else {
         const authType = settings.shareUsername && settings.sharePassword ? 'with credentials' : 'as guest';
+        const fullPath = `\\\\${settings.deviceName}\\${settings.shareName}\\${settings.fileName.replace(/\//g, '\\')}`;
         setMessage({ 
           type: 'success', 
-          text: `✅ SMB settings look valid! Share: \\\\${settings.deviceName}\\${settings.shareName}\\${settings.fileName} (${authType})`
+          text: `✅ SMB settings look valid!\nPath: ${fullPath}\nAuth: ${authType}`
         });
       }
     } catch (error) {
@@ -401,7 +405,10 @@ const TailscaleSyncSettings: React.FC = () => {
         </div>
 
         <div className="form-group">
-          <label>Excel File Name</label>
+          <label>
+            Excel File Path
+            <span className="help-text">File name or path with subfolders (e.g., subfolder/file.xlsx or Reports/January/data.xlsx)</span>
+          </label>
           <input
             type="text"
             value={settings.fileName}

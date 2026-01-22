@@ -85,7 +85,7 @@ Add these secrets:
 | `SHARE_NAME` | SMB share name from Step 3 | `BoilerData` |
 | `SHARE_USERNAME` | Your Windows username (leave empty for guest access) | `YourName` or empty |
 | `SHARE_PASSWORD` | Your Windows password (leave empty for guest access) | `YourPassword` or empty |
-| `FILE_NAME` | Excel filename in the share | `REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx` |
+| `FILE_NAME` | Excel file path (supports subfolders) | `REPORT DAILY.xlsx` or `Reports/January/data.xlsx` |
 
 **Note:** 
 - Both short name (`DESKTOP-ABC123`) and full Tailscale name work. Use whichever `tailscale status` shows.

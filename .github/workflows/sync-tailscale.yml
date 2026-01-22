@@ -81,7 +81,7 @@ jobs:
             echo "  SHARE_NAME = Your SMB share name (e.g., BoilerData)"
             echo "  SHARE_USERNAME = Your Windows username (optional for guest shares)"
             echo "  SHARE_PASSWORD = Your Windows password (optional for guest shares)"
-            echo "  FILE_NAME = Excel filename (e.g., REPORT DAILY BULAN 2026 - 01 JANUARI.xlsx)"
+            echo "  FILE_NAME = Excel file path (e.g., file.xlsx or subfolder/file.xlsx)"
             exit 1
           fi
           
