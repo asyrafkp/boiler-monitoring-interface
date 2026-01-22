@@ -208,9 +208,31 @@ jobs:
           if [ -f "data/boiler_data.xlsx" ] && [ -s "data/boiler_data.xlsx" ]; then
             echo "✅ Successfully downloaded locked file directly!"
           else
-            echo "⚠️  Locked file failed (NT_STATUS_SHARING_VIOLATION), trying copy file..."
+            echo "⚠️  Locked file failed (NT_STATUS_SHARING_VIOLATION)"
             
-            # Method 2: Fall back to copy file
+            # Method 2: Try Volume Shadow Copy (Previous Versions)
+            echo ""
+            echo "Method 2: Checking for Volume Shadow Copy..."
+            
+            # List shadow copies
+            if [ "$USE_GUEST" = true ]; then
+              SHADOWS=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "allinfo \"$SMB_PATH\"" 2>&1 | grep -i "GMT" || echo "")
+            else
+              SHADOWS=$(smbclient "//$DEVICE_NAME/$SHARE_NAME" -U "$SHARE_USERNAME%" -c "allinfo \"$SMB_PATH\"" 2>&1 | grep -i "GMT" || echo "")
+            fi
+            
+            if [ ! -z "$SHADOWS" ]; then
+              echo "✓ Shadow copies available, trying to access..."
+              # Try accessing via @GMT- path (Windows shadow copy notation)
+              # This would need the exact timestamp, which is complex to parse
+              echo "Note: Shadow copy access needs manual configuration"
+            else
+              echo "⚠️  No shadow copies found"
+            fi
+            
+            # Method 3: Fall back to copy file
+            echo ""
+            echo "Method 3: Trying copy file..."
             if [ "$USE_GUEST" = true ]; then
               smbclient "//$DEVICE_NAME/$SHARE_NAME" -N -c "get \"${{ env.FILE_NAME }}\" data/boiler_data.xlsx" 2>&1 | tee /tmp/copy_attempt.txt
             else
