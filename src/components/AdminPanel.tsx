@@ -4,6 +4,7 @@ import { AdminSettings } from './AdminSettings';
 import { DataValidation } from './DataValidation';
 import { DashboardCustomization } from './DashboardCustomization';
 import { MaintenanceFeatures } from './MaintenanceFeatures';
+import { OneDriveConnection } from './OneDriveConnection';
 import UserManagement from './UserManagement';
 import './AdminPanel.css';
 
@@ -29,7 +30,7 @@ interface AdminPanelProps {
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState<'health' | 'data' | 'validation' | 'customization' | 'maintenance' | 'user-management' | 'settings'>('health');
+  const [activeTab, setActiveTab] = useState<'health' | 'data' | 'validation' | 'customization' | 'maintenance' | 'onedrive' | 'user-management' | 'settings'>('health');
   const [isLoading, setIsLoading] = useState(false);
   const [syncLogs, setSyncLogs] = useState<SyncLog[]>([]);
   const [statusMessage, setStatusMessage] = useState('');
@@ -188,6 +189,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 onClick={() => setActiveTab('maintenance')}
               >
                 🔧 Maintenance
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'onedrive' ? 'active' : ''}`}
+                onClick={() => setActiveTab('onedrive')}
+              >
+                🔗 OneDrive
               </button>
               <button 
                 className={`tab-btn ${activeTab === 'user-management' ? 'active' : ''}`}
@@ -417,6 +424,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             {activeTab === 'maintenance' && (
               <div className="tab-content">
                 <MaintenanceFeatures />
+              </div>
+            )}
+
+            {/* OneDrive Connection Tab */}
+            {activeTab === 'onedrive' && (
+              <div className="tab-content">
+                <OneDriveConnection />
               </div>
             )}
 

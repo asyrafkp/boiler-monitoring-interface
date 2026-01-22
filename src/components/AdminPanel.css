@@ -518,3 +518,178 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* OneDrive Connection Styles */
+.onedrive-connection {
+  padding: 20px;
+}
+
+.onedrive-connection h3 {
+  font-size: 24px;
+  margin-bottom: 12px;
+  color: #1f2937;
+}
+
+.section-description {
+  color: #6b7280;
+  margin-bottom: 24px;
+}
+
+.config-sections {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.config-section {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.config-section h4 {
+  font-size: 18px;
+  margin-bottom: 16px;
+  color: #374151;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #374151;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group small {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.form-group small a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.form-group small a:hover {
+  text-decoration: underline;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.status-message {
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  white-space: pre-line;
+}
+
+.status-message.success {
+  background: #d1fae5;
+  border: 1px solid #6ee7b7;
+  color: #065f46;
+}
+
+.status-message.error {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+}
+
+.status-message.info {
+  background: #dbeafe;
+  border: 1px solid #93c5fd;
+  color: #1e40af;
+}
+
+.info-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.info-box h4 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: #1e40af;
+}
+
+.info-box ol {
+  margin: 0 0 12px 0;
+  padding-left: 24px;
+  color: #1e3a8a;
+}
+
+.info-box li {
+  margin-bottom: 8px;
+}
+
+.info-box p {
+  margin: 0;
+  font-weight: 500;
+  color: #1e40af;
+}
