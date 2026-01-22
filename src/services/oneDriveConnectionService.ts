@@ -113,6 +113,63 @@ export async function authenticateOneDrive(config: OneDriveAuthConfig): Promise<
 }
 
 /**
+ * Recursively search for a file in OneDrive by listing folders
+ * Works with personal OneDrive accounts (no SPO license required)
+ */
+async function findFileRecursively(
+  accessToken: string,
+  fileName: string,
+  path: string = '/me/drive/root/children',
+  maxDepth: number = 5,
+  currentDepth: number = 0
+): Promise<any> {
+  if (currentDepth >= maxDepth) {
+    return null;
+  }
+
+  const response = await fetch(`https://graph.microsoft.com/v1.0${path}`, {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = await response.json();
+  const items = data.value || [];
+
+  // Check if file is in current folder
+  const file = items.find((item: any) => 
+    item.name.toLowerCase() === fileName.toLowerCase() && 
+    item.file // Ensure it's a file, not a folder
+  );
+
+  if (file) {
+    return file;
+  }
+
+  // Recursively search subfolders
+  const folders = items.filter((item: any) => item.folder);
+  for (const folder of folders) {
+    const found = await findFileRecursively(
+      accessToken,
+      fileName,
+      `/me/drive/items/${folder.id}/children`,
+      maxDepth,
+      currentDepth + 1
+    );
+    if (found) {
+      return found;
+    }
+  }
+
+  return null;
+}
+
+/**
  * Get OneDrive share link for a file
  */
 export async function getOneDriveShareLink(
@@ -120,57 +177,38 @@ export async function getOneDriveShareLink(
   fileName: string
 ): Promise<string> {
   try {
-    let file: any = null;
-    
-    // Strategy 1: Use the simpler search endpoint (works with files in any folder)
-    // Just search by filename without path
-    const searchQuery = fileName.split('.')[0]; // Remove extension for broader search
-    const searchUrl = `https://graph.microsoft.com/v1.0/me/drive/search(q='${encodeURIComponent(searchQuery)}')`;
-    
     console.log('Searching OneDrive for:', fileName);
-    const searchResponse = await fetch(searchUrl, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (searchResponse.ok) {
-      const searchData = await searchResponse.json();
-      const files = searchData.value || [];
-      console.log(`Found ${files.length} files matching search`);
-      
-      // Find exact match (case-insensitive)
-      file = files.find((f: any) => 
-        f.name.toLowerCase() === fileName.toLowerCase() && 
-        f.file // Ensure it's a file, not a folder
-      );
-      
-      if (!file && files.length > 0) {
-        // Show all Excel files found
-        const excelFiles = files.filter((f: any) => f.name.match(/\.xlsx?$/i) && f.file);
-        const fileList = excelFiles.map((f: any) => 
-          `${f.name} (in: ${f.parentReference?.path || 'root'})`
-        ).join('\n  - ');
-        
-        throw new Error(
-          `Exact match not found for: ${fileName}\n\n` +
-          `Found ${excelFiles.length} Excel files in your OneDrive:\n  - ${fileList}\n\n` +
-          `Copy the exact filename from above (including all spaces and dashes).`
-        );
-      }
-    } else {
-      const errorData = await searchResponse.json();
-      throw new Error(`Search failed: ${errorData.error?.message || 'Unknown error'}`);
-    }
+    
+    // For personal accounts without SPO license, use recursive folder listing
+    const file = await findFileRecursively(accessToken, fileName);
     
     if (!file) {
+      // Try to list some Excel files to help user
+      const rootResponse = await fetch('https://graph.microsoft.com/v1.0/me/drive/root/children?$top=50', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (rootResponse.ok) {
+        const rootData = await rootResponse.json();
+        const excelFiles = rootData.value.filter((f: any) => f.name.match(/\.xlsx?$/i) && f.file);
+        const fileList = excelFiles.map((f: any) => f.name).slice(0, 10).join('\n  - ');
+        
+        throw new Error(
+          `File not found: ${fileName}\n\n` +
+          `First ${excelFiles.length} Excel files in root:\n  - ${fileList}\n\n` +
+          `Copy the exact filename (note: search depth limited to 5 folders deep).`
+        );
+      }
+      
       throw new Error(
         `File not found: ${fileName}\n\n` +
         `Make sure:\n` +
-        `1. The file exists in your OneDrive (any folder)\n` +
+        `1. The file exists in your OneDrive\n` +
         `2. The filename is exactly correct (including spaces)\n` +
-        `3. You have permission to access the file`
+        `3. The file is within 5 folders from root`
       );
     }
 
@@ -194,47 +232,37 @@ export async function getOneDriveShareLink(
 
     if (!shareResponse.ok) {
       const errorData = await shareResponse.json();
+      console.log('createLink failed, trying alternatives...', errorData.error?.message);
       
-      // If SPO license error, fall back to alternative method
-      if (errorData.error?.message?.includes('SPO license') || errorData.error?.code === 'BadRequest') {
-        console.log('Using fallback method for personal OneDrive account...');
-        
-        // Alternative: Create a sharing permission and extract the link
-        const permUrl = `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/permissions`;
-        const permResponse = await fetch(permUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            '@microsoft.graph.conflictBehavior': 'replace',
-            roles: ['read'],
-            link: {
-              type: 'view',
-              scope: 'anonymous'
-            }
-          })
-        });
-        
-        if (!permResponse.ok) {
-          // Last resort: Use the webUrl directly with download parameter
-          const webUrl = file.webUrl || file['@microsoft.graph.downloadUrl'];
-          if (webUrl) {
-            // Convert OneDrive web URL to direct download link
-            const directLink = webUrl.includes('1drv.ms') 
-              ? webUrl 
-              : webUrl.replace(/\?.*$/, '') + '?download=1';
-            return directLink;
-          }
-          throw new Error('Unable to create share link. Try using @microsoft.graph.downloadUrl from file metadata.');
+      // Personal OneDrive: Try to get existing share links first
+      const existingPermsUrl = `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/permissions`;
+      const existingPermsResponse = await fetch(existingPermsUrl, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
         }
+      });
+      
+      if (existingPermsResponse.ok) {
+        const permsData = await existingPermsResponse.json();
+        const existingLink = permsData.value?.find((p: any) => p.link?.scope === 'anonymous');
         
-        const permData = await permResponse.json();
-        return permData.link?.webUrl || permData.shareId;
+        if (existingLink?.link?.webUrl) {
+          console.log('Using existing share link');
+          return existingLink.link.webUrl;
+        }
       }
       
-      throw new Error(`Failed to create share link: ${errorData.error?.message || 'Unknown error'}`);
+      // If no existing link, user needs to create one manually
+      throw new Error(
+        `Unable to auto-create share link (personal OneDrive limitation).\n\n` +
+        `Please create a share link manually:\n` +
+        `1. Go to OneDrive and find: ${fileName}\n` +
+        `2. Right-click → Share → Copy link\n` +
+        `3. Go to GitHub repo Settings → Secrets → Update ONEDRIVE_LINK\n` +
+        `4. Paste the share link\n\n` +
+        `The link will last several months before expiring.`
+      );
     }
 
     const shareData = await shareResponse.json();
