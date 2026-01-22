@@ -146,44 +146,63 @@ jobs:
           # Create mount point
           sudo mkdir -p /mnt/tailscale_share
           
-          # Mount with or without credentials
-          if [ -n "$SHARE_USERNAME" ]; then
-            echo "🔐 Mounting with username: $SHARE_USERNAME"
-            # Create credentials file for mount (handle empty password)
-            echo "username=$SHARE_USERNAME" > /tmp/smb_creds
-            if [ -n "$SHARE_PASSWORD" ]; then
-              echo "password=$SHARE_PASSWORD" >> /tmp/smb_creds
-            else
-              echo "password=" >> /tmp/smb_creds
+          # Try multiple authentication methods
+          MOUNT_SUCCESS=false
+          
+          # Method 1: Try guest/null session (no credentials) - often works on home Windows shares
+          echo "🔓 Method 1: Trying guest/null session (no credentials)..."
+          for VERSION in "3.0" "2.1" "2.0"; do
+            echo "  Trying SMB $VERSION..."
+            if sudo mount -t cifs "//${DEVICE_NAME}/${SHARE_NAME}" /mnt/tailscale_share \
+              -o "guest,vers=$VERSION,nounix,noserverino,uid=$(id -u),gid=$(id -g)" 2>&1 | tee /tmp/mount_error.log; then
+              echo "✅ Mounted successfully with guest access (SMB $VERSION)"
+              MOUNT_SUCCESS=true
+              break
             fi
-            chmod 600 /tmp/smb_creds
-            
-            # Try mounting with different SMB versions (3.0, then 2.1, then 2.0)
-            MOUNT_SUCCESS=false
+          done
+          
+          # Method 2: If guest fails and username is provided, try with username + empty password
+          if [ "$MOUNT_SUCCESS" = false ] && [ -n "$SHARE_USERNAME" ]; then
+            echo ""
+            echo "🔐 Method 2: Trying with username '$SHARE_USERNAME' (empty password)..."
             for VERSION in "3.0" "2.1" "2.0"; do
-              echo "Trying SMB version $VERSION..."
+              echo "  Trying SMB $VERSION..."
               if sudo mount -t cifs "//${DEVICE_NAME}/${SHARE_NAME}" /mnt/tailscale_share \
-                -o "credentials=/tmp/smb_creds,vers=$VERSION,nounix,noserverino,uid=$(id -u),gid=$(id -g)" 2>/dev/null; then
-                echo "✅ Mounted successfully with SMB $VERSION"
+                -o "username=$SHARE_USERNAME,password=,vers=$VERSION,nounix,noserverino,uid=$(id -u),gid=$(id -g)" 2>&1 | tee /tmp/mount_error.log; then
+                echo "✅ Mounted successfully with username (SMB $VERSION)"
                 MOUNT_SUCCESS=true
                 break
               fi
             done
-            
-            # Clean up credentials file
-            rm -f /tmp/smb_creds
-            
-            if [ "$MOUNT_SUCCESS" = false ]; then
-              echo "❌ Failed to mount with SMB versions 3.0, 2.1, 2.0"
-              echo "Share: Desktop PC CCR is visible but mount fails"
-              echo "Try checking Windows share permissions"
-              exit 1
-            fi
-          else
-            echo "🔓 Mounting as guest (no credentials)..."
-            # Mount without credentials (guest access)
-            sudo mount -t cifs "//${DEVICE_NAME}/${SHARE_NAME}" /mnt/tailscale_share \
-              -o "guest,vers=3.0,uid=$(id -u),gid=$(id -g)"
+          fi
+          
+          # Method 3: Try with sec=ntlmssp (more compatible authentication)
+          if [ "$MOUNT_SUCCESS" = false ] && [ -n "$SHARE_USERNAME" ]; then
+            echo ""
+            echo "🔐 Method 3: Trying with NTLM authentication..."
+            for VERSION in "3.0" "2.1" "2.0"; do
+              echo "  Trying SMB $VERSION..."
+              if sudo mount -t cifs "//${DEVICE_NAME}/${SHARE_NAME}" /mnt/tailscale_share \
+                -o "username=$SHARE_USERNAME,password=,sec=ntlmssp,vers=$VERSION,nounix,noserverino,uid=$(id -u),gid=$(id -g)" 2>&1 | tee /tmp/mount_error.log; then
+                echo "✅ Mounted successfully with NTLM (SMB $VERSION)"
+                MOUNT_SUCCESS=true
+                break
+              fi
+            done
+          fi
+          
+          # If all methods fail, show detailed error
+          if [ "$MOUNT_SUCCESS" = false ]; then
+            echo ""
+            echo "❌ All mount methods failed"
+            echo ""
+            echo "Last error:"
+            cat /tmp/mount_error.log || echo "No error log available"
+            echo ""
+            echo "Share: Desktop PC CCR is visible but mount fails"
+            echo "Username: ${SHARE_USERNAME:-none}"
+            echo "Try checking Windows share and NTFS permissions for user CCR"
+            exit 1
           fi
           
           # Copy Excel file
